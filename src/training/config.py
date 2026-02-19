@@ -287,12 +287,43 @@ def get_full_config() -> TrainingConfig:
 
 
 def get_large_scale_config() -> TrainingConfig:
-    """Large-scale experiment (N=100, M=40)."""
+    """Large-scale experiment (N=100 enemies, M=40 jammers).
+    
+    This configuration is designed for the production demo:
+    - 100 enemy drones (10x previous experiments)
+    - 40 jammer drones (10x previous experiments)
+    - 2M training steps for proper convergence
+    - Larger hidden dimension for complex patterns
+    - Adjusted DBSCAN for larger arena
+    """
     config = TrainingConfig()
-    config.env.N = 100
-    config.env.M = 40
+    
+    # Scale up enemy swarm and jammers
+    config.env.N = 100              # 100 enemies (target drones)
+    config.env.M = 40               # 40 jammer drones
+    config.env.arena_size = 300.0   # Larger arena for more drones
+    
+    # Adjust DBSCAN for larger scale
+    config.env.eps = 40.0           # Larger clustering radius
+    config.env.min_samples = 3      # More samples for noise filtering
+    
+    # Increase episode length for complex scenarios
+    config.env.max_steps = 300      # Longer episodes
+    
+    # Larger network for more complex patterns
     config.network.hidden_dim = 256
-    config.total_timesteps = 5_000_000
+    
+    # Training parameters
+    config.total_timesteps = 2_000_000  # 2M steps
+    config.ppo.rollout_length = 4096    # Larger rollouts for stability
+    config.ppo.batch_size = 512         # Larger batch size
+    config.ppo.lr_actor = 1e-4          # Lower LR for stability
+    config.ppo.lr_critic = 3e-4
+    config.ppo.n_epochs = 10
+    
+    # Disable early stopping to ensure full training
+    config.disable_early_convergence = True
+    
     return config
 
 

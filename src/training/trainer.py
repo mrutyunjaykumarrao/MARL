@@ -559,6 +559,11 @@ class Trainer:
             "fps": self.total_timesteps / elapsed
         }
         
+        # Save final stats
+        import json
+        with open(self.output_dir / "final_stats.json", "w") as f:
+            json.dump(final_stats, f, indent=2)
+        
         print("=" * 70)
         print("Training Complete!")
         print(f"  Total timesteps: {self.total_timesteps:,}")
@@ -568,9 +573,54 @@ class Trainer:
         print(f"  FPS: {final_stats['fps']:.0f}")
         print("=" * 70)
         
+        # Prepare deployment artifacts
+        self._prepare_deployment_artifacts()
+        
         self.logger.close()
         
         return final_stats
+    
+    def _prepare_deployment_artifacts(self):
+        """Copy essential files to deployment folder."""
+        import shutil
+        
+        deployment_dir = Path(self.config.output_dir) / "deployment"
+        deployment_dir.mkdir(parents=True, exist_ok=True)
+        
+        print("\nPreparing deployment artifacts...")
+        
+        # Copy actor weights
+        actor_src = self.output_dir / "actor_state_dict.pt"
+        if actor_src.exists():
+            actor_dst = deployment_dir / f"actor_{self.config.experiment_name}.pt"
+            shutil.copy2(actor_src, actor_dst)
+            print(f"  [+] Actor weights: {actor_dst}")
+            
+            # Also copy as latest
+            latest_dst = deployment_dir / "actor_latest.pt"
+            shutil.copy2(actor_src, latest_dst)
+        
+        # Create deployment config
+        import json
+        deploy_config = {
+            "experiment_name": self.config.experiment_name,
+            "obs_dim": self.config.network.obs_dim,
+            "hidden_dim": self.config.network.hidden_dim,
+            "v_max": self.config.env.v_max,
+            "num_bands": self.config.env.num_bands,
+            "M": self.config.env.M,
+            "N": self.config.env.N,
+            "arena_size": self.config.env.arena_size,
+            "best_lambda2_reduction": self.best_reduction,
+            "total_timesteps": self.total_timesteps
+        }
+        
+        config_path = deployment_dir / f"config_{self.config.experiment_name}.json"
+        with open(config_path, 'w') as f:
+            json.dump(deploy_config, f, indent=2)
+        print(f"  [+] Deployment config: {config_path}")
+        
+        print(f"  [SUCCESS] Deployment artifacts saved to: {deployment_dir}")
 
 
 # =============================================================================
