@@ -1,0 +1,242 @@
+# =============================================================================
+# MARL JAMMER DRONE SYSTEM - MASTER CONFIGURATION
+# =============================================================================
+# This file contains ALL configurable parameters for the system.
+# Modify these values to run different experiments.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# PHYSICAL CONSTANTS (RF Propagation - Section 3.2, 3.3, 4.3)
+# -----------------------------------------------------------------------------
+physics:
+  # Speed of light (m/s)
+  c: 3.0e8
+
+  # Enemy drone transmit power
+  P_tx_dBm: 20.0 # dBm (0.1 Watts)
+  P_tx_watts: 0.1 # Watts
+
+  # Receiver sensitivity threshold
+  P_sens_dBm: -90.0 # dBm
+  P_sens_watts: 1.0e-12 # Watts (1 pW)
+
+  # Jammer transmit power
+  P_jammer_dBm: 30.0 # dBm (1 Watt)
+  P_jammer_watts: 1.0 # Watts
+
+  # Jamming disruption threshold
+  P_jam_thresh_dBm: -70.0 # dBm
+  P_jam_thresh_watts: 1.0e-10 # Watts (100 pW)
+
+  # Available frequency bands (Hz)
+  frequency_bands:
+    0: 4.33e8 # 433 MHz
+    1: 9.15e8 # 915 MHz
+    2: 2.40e9 # 2.4 GHz (default)
+    3: 5.80e9 # 5.8 GHz
+
+  # Default enemy frequency band index
+  default_enemy_band: 2 # 2.4 GHz
+
+# -----------------------------------------------------------------------------
+# ENVIRONMENT PARAMETERS (Section 4)
+# -----------------------------------------------------------------------------
+environment:
+  # Arena dimensions (meters)
+  arena_size: 200.0 # 200m x 200m arena
+
+  # Number of enemy drones
+  num_enemies: 10 # N = 10 (scalable to 100)
+
+  # Number of jammer drones
+  num_jammers: 4 # M = 4 (scalable to 40)
+
+  # Maximum simulation steps per episode
+  max_steps: 500
+
+  # Enemy motion model: "random_walk" or "coordinated_turn"
+  enemy_motion_mode: "coordinated_turn" # Mode B - matches baseline paper
+
+  # DBSCAN re-computation frequency (steps)
+  dbscan_recompute_interval: 10
+
+  # Centroid drift threshold for jammer reassignment (meters)
+  centroid_drift_threshold: 30.0
+
+# -----------------------------------------------------------------------------
+# ENEMY SWARM DYNAMICS (Section 4.1)
+# -----------------------------------------------------------------------------
+enemy_dynamics:
+  # Random Walk (Mode A)
+  random_walk:
+    v_enemy: 2.0 # m/s - max velocity per axis
+
+  # Coordinated Turn (Mode B) - matches baseline paper Eq. 3-5
+  coordinated_turn:
+    sigma_x: 0.1 # Position noise std (meters)
+    sigma_y: 0.1 # Position noise std (meters)
+    sigma_omega: 0.01 # Turn rate noise std (rad/s)
+    omega_min: 0.03 # Min turn rate (rad/s)
+    omega_max: 0.04 # Max turn rate (rad/s)
+    speed_min: 0.20 # Min speed (m/s)
+    speed_max: 0.40 # Max speed (m/s)
+
+# -----------------------------------------------------------------------------
+# DBSCAN CLUSTERING (Section 4.2)
+# -----------------------------------------------------------------------------
+clustering:
+  eps: 30.0 # Neighborhood radius (meters)
+  min_samples: 2 # Minimum drones to form cluster
+
+# -----------------------------------------------------------------------------
+# ACTION SPACE (Section 6)
+# -----------------------------------------------------------------------------
+action_space:
+  # Continuous velocity bounds (m/s)
+  v_max: 5.0 # Max velocity per axis
+
+  # Number of frequency bands
+  num_bands: 4
+
+# -----------------------------------------------------------------------------
+# OBSERVATION SPACE (Section 5)
+# -----------------------------------------------------------------------------
+observation_space:
+  # Observation dimension per agent
+  obs_dim: 5
+
+  # Feature indices
+  # 0: dist_to_centroid (normalized by arena_size)
+  # 1: cluster_density (fraction of total enemies)
+  # 2: dist_to_others (mean distance to other jammers, normalized)
+  # 3: coverage_overlap (fraction of overlapping jammer pairs)
+  # 4: band_match (binary: 1 if jammer band == enemy band)
+
+# -----------------------------------------------------------------------------
+# REWARD FUNCTION WEIGHTS (Section 3.7)
+# -----------------------------------------------------------------------------
+reward:
+  # Primary: Lambda-2 reduction (swarm fragmentation)
+  omega_1: 1.0
+
+  # Band match reward
+  omega_2: 0.3
+
+  # Proximity to cluster centroid reward
+  omega_3: 0.2
+
+  # Energy penalty (high-speed movement)
+  omega_4: 0.1
+
+  # Coverage overlap penalty
+  omega_5: 0.2
+
+  # Proximity decay constant (kappa in exp(-kappa * d))
+  kappa: 0.05
+
+  # Overlap detection radius (multiple of R_jam)
+  overlap_radius_multiplier: 2.0
+
+# -----------------------------------------------------------------------------
+# NEURAL NETWORK ARCHITECTURE (Section 3.8, 3.9)
+# -----------------------------------------------------------------------------
+network:
+  # Shared trunk hidden dimensions
+  hidden_dim_1: 128
+  hidden_dim_2: 128
+
+  # Log sigma bounds for continuous action
+  log_sigma_min: -2.0
+  log_sigma_max: 2.0
+
+  # Use LayerNorm (True) or BatchNorm (False)
+  use_layer_norm: true
+
+# -----------------------------------------------------------------------------
+# PPO HYPERPARAMETERS (Section 8.5)
+# -----------------------------------------------------------------------------
+ppo:
+  # Discount factor
+  gamma: 0.99
+
+  # GAE lambda
+  lambda_gae: 0.95
+
+  # PPO clip epsilon
+  clip_eps: 0.2
+
+  # Learning rates
+  lr_actor: 3.0e-4
+  lr_critic: 1.0e-3
+
+  # Loss weights
+  c1: 0.5 # Critic loss coefficient
+  c2: 0.01 # Entropy bonus coefficient
+
+  # PPO epochs per rollout
+  num_epochs: 10
+
+  # Rollout buffer length
+  rollout_length: 2048
+
+  # Mini-batch size
+  batch_size: 256
+
+  # Gradient clipping
+  max_grad_norm: 0.5
+
+  # Total training timesteps
+  total_timesteps: 2_000_000
+
+# -----------------------------------------------------------------------------
+# TRAINING SETTINGS
+# -----------------------------------------------------------------------------
+training:
+  # Random seed for reproducibility
+  seed: 42
+
+  # Device: "cuda" or "cpu"
+  device: "cuda"
+
+  # Logging frequency (rollouts)
+  log_interval: 10
+
+  # Checkpoint save frequency (rollouts)
+  save_interval: 100
+
+  # Convergence criteria
+  target_lambda2_reduction: 0.70 # 70% reduction target
+  convergence_episodes: 50 # Consecutive episodes
+  min_entropy_threshold: 0.1 # Policy entropy threshold
+
+  # Early stopping
+  early_stop_patience: 100 # Rollouts without improvement
+
+# -----------------------------------------------------------------------------
+# EVALUATION SETTINGS (Section 9)
+# -----------------------------------------------------------------------------
+evaluation:
+  # Number of test episodes
+  num_test_episodes: 100
+
+  # Fixed seed sequence for reproducibility
+  test_seed_start: 1000
+
+# -----------------------------------------------------------------------------
+# TERMINATION CONDITIONS (Section 11.3)
+# -----------------------------------------------------------------------------
+termination:
+  # Success: lambda_2 < threshold * lambda_2(0) for N consecutive steps
+  success_threshold: 0.2
+  success_consecutive_steps: 10
+
+  # Complete fragmentation: lambda_2 = 0
+  fragmentation_epsilon: 1.0e-6
+
+# -----------------------------------------------------------------------------
+# FILE PATHS
+# -----------------------------------------------------------------------------
+paths:
+  checkpoints: "checkpoints"
+  logs: "logs"
+  results: "results"
