@@ -45,8 +45,9 @@ class EnvironmentConfig:
     # RF parameters
     tx_power_dbm: float = 20.0      # Enemy transmit power
     sensitivity_dbm: float = -90.0  # Receiver sensitivity
-    jammer_power_dbm: float = 30.0  # Jammer power
-    jam_thresh_dbm: float = -70.0   # Jamming threshold (less negative = shorter range)
+    jammer_power_dbm: float = 30.0  # Jammer power (1W)
+    jam_thresh_dbm: float = -40.0   # Jamming threshold: -40dBm gives ~31m range at 2.4GHz
+                                    # Previous -70dBm was too easy (995m range = instant win)
     random_jammer_start: bool = False  # Start jammers at random positions
     
     # Reward weights (ω₁ to ω₅)
