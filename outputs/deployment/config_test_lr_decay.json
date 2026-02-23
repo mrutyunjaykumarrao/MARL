@@ -1,0 +1,12 @@
+{
+  "experiment_name": "test_lr_decay",
+  "obs_dim": 5,
+  "hidden_dim": 128,
+  "v_max": 5.0,
+  "num_bands": 4,
+  "M": 4,
+  "N": 10,
+  "arena_size": 200.0,
+  "best_lambda2_reduction": 0.0,
+  "total_timesteps": 8192
+}

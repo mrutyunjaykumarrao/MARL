@@ -1,0 +1,56 @@
+{
+  "env": {
+    "N": 30,
+    "M": 6,
+    "arena_size": 150.0,
+    "v_max": 5.0,
+    "v_enemy": 2.0,
+    "motion_mode": "random",
+    "num_bands": 4,
+    "eps": 25.0,
+    "min_samples": 2,
+    "k_recompute": 10,
+    "max_steps": 150,
+    "tx_power_dbm": 20.0,
+    "sensitivity_dbm": -90.0,
+    "jammer_power_dbm": 30.0,
+    "reward_weights": {
+      "lambda2_reduction": 10.0,
+      "band_match": 0.0,
+      "proximity": 0.0,
+      "energy": 0.0,
+      "overlap": 0.0
+    }
+  },
+  "network": {
+    "obs_dim": 5,
+    "hidden_dim": 64,
+    "log_std_min": -2.0,
+    "log_std_max": 0.5
+  },
+  "ppo": {
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_eps": 0.2,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.001,
+    "c1": 0.5,
+    "c2": 0.01,
+    "n_epochs": 15,
+    "batch_size": 128,
+    "max_grad_norm": 0.5,
+    "rollout_length": 1024
+  },
+  "total_timesteps": 200000,
+  "log_interval": 1,
+  "save_interval": 10,
+  "eval_interval": 10,
+  "eval_episodes": 5,
+  "experiment_name": "professor_final_200k",
+  "output_dir": "outputs",
+  "seed": 42,
+  "device": "auto",
+  "target_reduction": 70.0,
+  "convergence_window": 50,
+  "early_stop_patience": 100
+}

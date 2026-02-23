@@ -166,6 +166,8 @@ class Trainer:
             M=self.config.env.M,
             v_max=self.config.env.v_max,
             num_bands=self.config.env.num_bands,
+            log_std_min=self.config.network.log_std_min,
+            log_std_max=self.config.network.log_std_max,
             gamma=self.config.ppo.gamma,
             gae_lambda=self.config.ppo.gae_lambda,
             clip_eps=self.config.ppo.clip_eps,
@@ -321,13 +323,13 @@ class Trainer:
         
         return stats
     
-    def evaluate(self, n_episodes: int = 5, deterministic: bool = True) -> EvaluationResult:
+    def evaluate(self, n_episodes: int = 5, deterministic: bool = False) -> EvaluationResult:
         """
         Evaluate current policy.
         
         Args:
             n_episodes: Number of episodes to evaluate
-            deterministic: Use deterministic policy
+            deterministic: Use deterministic policy (False for stochastic to match training)
             
         Returns:
             EvaluationResult with episode statistics
@@ -500,6 +502,22 @@ class Trainer:
             # Update policy
             update_stats = self.update()
             
+            # Linear learning rate decay to 10% of initial (NOT to zero!)
+            # Decaying to 0 causes catastrophic forgetting
+            progress = self.total_timesteps / self.config.total_timesteps
+            lr_min_factor = 0.1  # Keep at least 10% of initial LR
+            decay_factor = lr_min_factor + (1.0 - lr_min_factor) * (1.0 - progress)
+            lr_actor = self.agent.lr_actor_initial * decay_factor
+            lr_critic = self.agent.lr_critic_initial * decay_factor
+            self.agent.set_learning_rate(lr_actor, lr_critic)
+            
+            # Entropy coefficient decay (keep minimum for exploration)
+            # Start with initial c2, decay to 20% minimum to prevent policy collapse
+            c2_min_factor = 0.2
+            c2_decay = c2_min_factor + (1.0 - c2_min_factor) * (1.0 - progress)
+            c2 = self.agent.c2_initial * c2_decay
+            self.agent.set_entropy_coef(c2)
+            
             # Log rollout
             self.logger.log_rollout(
                 timesteps=self.total_timesteps,
@@ -589,16 +607,19 @@ class Trainer:
         
         print("\nPreparing deployment artifacts...")
         
-        # Copy actor weights
-        actor_src = self.output_dir / "actor_state_dict.pt"
-        if actor_src.exists():
-            actor_dst = deployment_dir / f"actor_{self.config.experiment_name}.pt"
-            shutil.copy2(actor_src, actor_dst)
-            print(f"  [+] Actor weights: {actor_dst}")
+        # Copy best model weights (full checkpoint)
+        best_model_src = self.output_dir / "checkpoints" / "best" / "ppo_agent.pt"
+        if best_model_src.exists():
+            model_dst = deployment_dir / f"model_{self.config.experiment_name}.pt"
+            shutil.copy2(best_model_src, model_dst)
+            print(f"  [+] Model weights: {model_dst}")
             
             # Also copy as latest
-            latest_dst = deployment_dir / "actor_latest.pt"
-            shutil.copy2(actor_src, latest_dst)
+            latest_dst = deployment_dir / "model_latest.pt"
+            shutil.copy2(best_model_src, latest_dst)
+            print(f"  [+] Latest model: {latest_dst}")
+        else:
+            print(f"  [!] Warning: No checkpoint found at {best_model_src}")
         
         # Create deployment config
         import json

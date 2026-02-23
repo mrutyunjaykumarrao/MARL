@@ -152,14 +152,17 @@ class RewardCalculator:
         # Term 5: Overlap penalty
         r_overlap = self._compute_overlap_penalty(jammer_positions)
         
-        # Weighted sum
-        total = (
+        # Weighted sum (raw)
+        total_raw = (
             self.omega_1 * r_lambda2
             + self.omega_2 * r_band
             + self.omega_3 * r_proximity
             - self.omega_4 * r_energy
             - self.omega_5 * r_overlap
         )
+        
+        # CLIP total reward to [-10, +10] for stable training
+        total = np.clip(total_raw, -10.0, 10.0)
         
         components = RewardComponents(
             lambda2_reduction=r_lambda2,
