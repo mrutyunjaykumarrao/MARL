@@ -36,8 +36,6 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Training outputs (large files)
-outputs/
 
 # Logs
 *.log

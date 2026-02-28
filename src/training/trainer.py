@@ -166,6 +166,8 @@ class Trainer:
             M=self.config.env.M,
             v_max=self.config.env.v_max,
             num_bands=self.config.env.num_bands,
+            log_std_min=self.config.network.log_std_min,
+            log_std_max=self.config.network.log_std_max,
             gamma=self.config.ppo.gamma,
             gae_lambda=self.config.ppo.gae_lambda,
             clip_eps=self.config.ppo.clip_eps,
@@ -321,13 +323,13 @@ class Trainer:
         
         return stats
     
-    def evaluate(self, n_episodes: int = 5, deterministic: bool = True) -> EvaluationResult:
+    def evaluate(self, n_episodes: int = 5, deterministic: bool = False) -> EvaluationResult:
         """
         Evaluate current policy.
         
         Args:
             n_episodes: Number of episodes to evaluate
-            deterministic: Use deterministic policy
+            deterministic: Use deterministic policy (False for stochastic to match training)
             
         Returns:
             EvaluationResult with episode statistics
@@ -500,6 +502,22 @@ class Trainer:
             # Update policy
             update_stats = self.update()
             
+            # Linear learning rate decay to 10% of initial (NOT to zero!)
+            # Decaying to 0 causes catastrophic forgetting
+            progress = self.total_timesteps / self.config.total_timesteps
+            lr_min_factor = 0.1  # Keep at least 10% of initial LR
+            decay_factor = lr_min_factor + (1.0 - lr_min_factor) * (1.0 - progress)
+            lr_actor = self.agent.lr_actor_initial * decay_factor
+            lr_critic = self.agent.lr_critic_initial * decay_factor
+            self.agent.set_learning_rate(lr_actor, lr_critic)
+            
+            # Entropy coefficient decay (keep minimum for exploration)
+            # Start with initial c2, decay to 20% minimum to prevent policy collapse
+            c2_min_factor = 0.2
+            c2_decay = c2_min_factor + (1.0 - c2_min_factor) * (1.0 - progress)
+            c2 = self.agent.c2_initial * c2_decay
+            self.agent.set_entropy_coef(c2)
+            
             # Log rollout
             self.logger.log_rollout(
                 timesteps=self.total_timesteps,
@@ -559,6 +577,11 @@ class Trainer:
             "fps": self.total_timesteps / elapsed
         }
         
+        # Save final stats
+        import json
+        with open(self.output_dir / "final_stats.json", "w") as f:
+            json.dump(final_stats, f, indent=2)
+        
         print("=" * 70)
         print("Training Complete!")
         print(f"  Total timesteps: {self.total_timesteps:,}")
@@ -568,9 +591,57 @@ class Trainer:
         print(f"  FPS: {final_stats['fps']:.0f}")
         print("=" * 70)
         
+        # Prepare deployment artifacts
+        self._prepare_deployment_artifacts()
+        
         self.logger.close()
         
         return final_stats
+    
+    def _prepare_deployment_artifacts(self):
+        """Copy essential files to deployment folder."""
+        import shutil
+        
+        deployment_dir = Path(self.config.output_dir) / "deployment"
+        deployment_dir.mkdir(parents=True, exist_ok=True)
+        
+        print("\nPreparing deployment artifacts...")
+        
+        # Copy best model weights (full checkpoint)
+        best_model_src = self.output_dir / "checkpoints" / "best" / "ppo_agent.pt"
+        if best_model_src.exists():
+            model_dst = deployment_dir / f"model_{self.config.experiment_name}.pt"
+            shutil.copy2(best_model_src, model_dst)
+            print(f"  [+] Model weights: {model_dst}")
+            
+            # Also copy as latest
+            latest_dst = deployment_dir / "model_latest.pt"
+            shutil.copy2(best_model_src, latest_dst)
+            print(f"  [+] Latest model: {latest_dst}")
+        else:
+            print(f"  [!] Warning: No checkpoint found at {best_model_src}")
+        
+        # Create deployment config
+        import json
+        deploy_config = {
+            "experiment_name": self.config.experiment_name,
+            "obs_dim": self.config.network.obs_dim,
+            "hidden_dim": self.config.network.hidden_dim,
+            "v_max": self.config.env.v_max,
+            "num_bands": self.config.env.num_bands,
+            "M": self.config.env.M,
+            "N": self.config.env.N,
+            "arena_size": self.config.env.arena_size,
+            "best_lambda2_reduction": self.best_reduction,
+            "total_timesteps": self.total_timesteps
+        }
+        
+        config_path = deployment_dir / f"config_{self.config.experiment_name}.json"
+        with open(config_path, 'w') as f:
+            json.dump(deploy_config, f, indent=2)
+        print(f"  [+] Deployment config: {config_path}")
+        
+        print(f"  [SUCCESS] Deployment artifacts saved to: {deployment_dir}")
 
 
 # =============================================================================

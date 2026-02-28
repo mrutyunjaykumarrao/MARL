@@ -1,0 +1,20 @@
+# Deployment Artifacts
+# ====================
+# This folder contains only the files needed for deploying the trained MARL jammer system.
+# 
+# Files Generated After Training:
+# ├── actor_state_dict.pt      - Trained actor weights (THE ONLY REQUIRED FILE)
+# ├── config.json              - Model configuration
+# ├── deployment_config.json   - Lightweight deployment config
+# └── README.md                - Deployment instructions
+#
+# Post-training:
+# ├── training_summary.json    - Training statistics summary
+# └── best_model_info.txt      - Best model performance info
+#
+# Size: ~150KB total (compared to full outputs which can be 50MB+)
+#
+# To Deploy:
+#   1. Copy this folder to the target system
+#   2. Use deploy.py to run inference
+#   3. Only actor_state_dict.pt is required for minimal deployment

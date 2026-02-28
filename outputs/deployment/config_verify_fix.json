@@ -1,0 +1,12 @@
+{
+  "experiment_name": "verify_fix",
+  "obs_dim": 5,
+  "hidden_dim": 256,
+  "v_max": 5.0,
+  "num_bands": 4,
+  "M": 40,
+  "N": 100,
+  "arena_size": 300.0,
+  "best_lambda2_reduction": 0.0,
+  "total_timesteps": 20480
+}
