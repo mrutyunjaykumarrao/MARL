@@ -70,6 +70,9 @@ class PPOAgent:
         M: int = 4,
         v_max: float = 5.0,
         num_bands: int = 4,
+        # Actor variance bounds
+        log_std_min: float = -1.0,
+        log_std_max: float = 0.5,
         # PPO hyperparameters
         gamma: float = 0.99,
         gae_lambda: float = 0.95,
@@ -123,7 +126,12 @@ class PPOAgent:
         self.clip_eps = clip_eps
         self.c1 = c1
         self.c2 = c2
+        self.c2_initial = c2  # Store for decay
         self.max_grad_norm = max_grad_norm
+        
+        # Store initial learning rates for decay
+        self.lr_actor_initial = lr_actor
+        self.lr_critic_initial = lr_critic
         
         self.rollout_length = rollout_length
         self.batch_size = batch_size
@@ -140,7 +148,9 @@ class PPOAgent:
             obs_dim=obs_dim,
             hidden_dim=hidden_dim,
             v_max=v_max,
-            num_bands=num_bands
+            num_bands=num_bands,
+            log_std_min=log_std_min,
+            log_std_max=log_std_max
         ).to(self.device)
         
         self.critic = Critic(
@@ -361,6 +371,17 @@ class PPOAgent:
             self.training_stats[key].append(value)
         
         return stats
+    
+    def set_learning_rate(self, lr_actor: float, lr_critic: float):
+        """Update learning rates for decay during training."""
+        for param_group in self.actor_optimizer.param_groups:
+            param_group['lr'] = lr_actor
+        for param_group in self.critic_optimizer.param_groups:
+            param_group['lr'] = lr_critic
+    
+    def set_entropy_coef(self, c2: float):
+        """Update entropy coefficient for decay during training."""
+        self.c2 = c2
     
     def save(self, path: str):
         """

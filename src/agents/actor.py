@@ -112,6 +112,7 @@ if HAS_TORCH:
             # Smaller initialization for output layers
             nn.init.orthogonal_(self.mu_head.weight, gain=0.01)
             nn.init.orthogonal_(self.log_std_head.weight, gain=0.01)
+            nn.init.constant_(self.log_std_head.bias, -0.5)  # Start with lower variance
             nn.init.orthogonal_(self.band_head.weight, gain=0.01)
         
         def forward(

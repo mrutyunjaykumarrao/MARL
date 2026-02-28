@@ -1,0 +1,12 @@
+{
+  "experiment_name": "professor_final",
+  "obs_dim": 5,
+  "hidden_dim": 64,
+  "v_max": 5.0,
+  "num_bands": 4,
+  "M": 6,
+  "N": 30,
+  "arena_size": 150.0,
+  "best_lambda2_reduction": 88.49880055827559,
+  "total_timesteps": 100352
+}

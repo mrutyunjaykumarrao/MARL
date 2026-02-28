@@ -1,0 +1,12 @@
+{
+  "experiment_name": "production_v9",
+  "obs_dim": 5,
+  "hidden_dim": 128,
+  "v_max": 5.0,
+  "num_bands": 4,
+  "M": 15,
+  "N": 50,
+  "arena_size": 200.0,
+  "best_lambda2_reduction": 97.54312963316991,
+  "total_timesteps": 200704
+}

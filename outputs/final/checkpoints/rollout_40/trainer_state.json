@@ -1,0 +1,6 @@
+{
+  "total_timesteps": 40960,
+  "total_episodes": 275,
+  "total_rollouts": 40,
+  "best_reduction": 51.963332947186
+}

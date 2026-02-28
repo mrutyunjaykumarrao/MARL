@@ -473,11 +473,15 @@ class JammerEnv(gym.Env):
         """
         enemy_freq = self.BANDS[self.enemy_band]
         
-        # Build adjacency matrix
+        # Convert dBm to Watts for physics calculations
+        tx_power_watts = db_to_watts(self.P_tx_dbm)
+        sensitivity_watts = db_to_watts(self.P_sens_dbm)
+        
+        # Build adjacency matrix (requires Watts, not dBm!)
         adj = compute_adjacency_matrix(
             self.enemy_swarm.positions,
-            self.P_tx_dbm,
-            self.P_sens_dbm,
+            tx_power_watts,
+            sensitivity_watts,
             enemy_freq
         )
         
