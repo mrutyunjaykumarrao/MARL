@@ -1,0 +1,8 @@
+{
+  "total_timesteps": 501760,
+  "total_episodes": 2523,
+  "total_rollouts": 245,
+  "best_lambda2_reduction": 83.45688252666996,
+  "time_elapsed": 1826.8075771331787,
+  "fps": 274.6649435226316
+}

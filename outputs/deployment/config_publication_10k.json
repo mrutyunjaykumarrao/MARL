@@ -1,0 +1,12 @@
+{
+  "experiment_name": "publication_10k",
+  "obs_dim": 5,
+  "hidden_dim": 64,
+  "v_max": 5.0,
+  "num_bands": 4,
+  "M": 6,
+  "N": 30,
+  "arena_size": 150.0,
+  "best_lambda2_reduction": 80.35443333516983,
+  "total_timesteps": 200704
+}

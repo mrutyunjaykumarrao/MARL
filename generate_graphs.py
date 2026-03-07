@@ -443,22 +443,22 @@ def plot_avg_received_power_comparison(data: dict, save_path: Path = None, show:
     
     fig, ax = plt.subplots(figsize=(12, 8))
     
-    # Plot MARL-PPO - Purple line (like reference)
+    # Plot MARL-PPO - Purple line
     ax.plot(episodes, marl_power_dbm, color='#9467bd', linewidth=2.5, 
-            label='MARL-PPO (Ours)')
+            label='MARL-PPO')
     
-    # Plot Q-table - Orange line (like reference)
+    # Plot Q-table - Orange line
     ax.plot(episodes, qtable_power_dbm, color='#ff7f0e', linewidth=2.5,
-            label='Q-table (Previous Paper)')
+            label='Q-table Baseline')
     
     # Plot threshold line - Black dashed
     ax.axhline(y=threshold_dbm, color='black', linestyle='--', linewidth=2,
-               label='Jamming Threshold')
+               label='Jamming Threshold (-67 dBm)')
     
-    # Formatting - Match reference image exactly
+    # Formatting
     ax.set_xlabel('Episodes', fontsize=14, fontweight='bold')
     ax.set_ylabel('Avg. Received Power (dBm)', fontsize=14, fontweight='bold')
-    ax.set_title('Average Jamming Power at Enemy Links: MARL-PPO vs Q-table', 
+    ax.set_title('Average Jamming Power at Enemy Links', 
                  fontsize=16, fontweight='bold')
     ax.set_ylim([-70, -40])
     ax.set_xlim([0, 1.6e5])
@@ -477,15 +477,14 @@ def plot_avg_received_power_comparison(data: dict, save_path: Path = None, show:
     improvement = final_marl - final_qtable
     
     textstr = '\n'.join([
-        'Performance Comparison:',
-        f'MARL-PPO Final: {final_marl:.1f} dBm',
-        f'Q-table Final: {final_qtable:.1f} dBm', 
+        'Performance Summary:',
+        f'MARL-PPO: {final_marl:.1f} dBm',
+        f'Q-table: {final_qtable:.1f} dBm', 
         f'Improvement: +{abs(improvement):.1f} dB',
         '',
-        'Key Insight:',
-        'MARL-PPO learns optimal jammer',
-        'positioning while Q-table fails',
-        'due to state-space explosion'
+        'MARL-PPO achieves higher',
+        'received power at enemy links',
+        'through learned positioning'
     ])
     props = dict(boxstyle='round', facecolor='lightyellow', alpha=0.9)
     ax.text(0.02, 0.02, textstr, transform=ax.transAxes, fontsize=10,

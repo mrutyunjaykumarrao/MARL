@@ -1,0 +1,15 @@
+{
+  "total_scenarios": 100,
+  "scenario_types": {
+    "random": 30,
+    "clustered": 30,
+    "grid": 20,
+    "line": 10,
+    "edge": 10
+  },
+  "config": {
+    "N": 30,
+    "M": 6,
+    "arena_size": 180
+  }
+}

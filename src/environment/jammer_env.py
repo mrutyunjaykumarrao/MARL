@@ -121,6 +121,7 @@ class JammerEnv(gym.Env):
         max_reset_attempts: int = 100,
         debug_mode: bool = False,
         random_jammer_start: bool = False,  # If True, start jammers at random positions
+        corner_start: bool = False,  # If True, start jammers at corners (worst positions)
         # Other
         seed: Optional[int] = None,
         render_mode: Optional[str] = None
@@ -177,6 +178,7 @@ class JammerEnv(gym.Env):
         self.max_reset_attempts = max_reset_attempts
         self.debug_mode = debug_mode
         self.random_jammer_start = random_jammer_start
+        self.corner_start = corner_start
         
         # Frequency bands (Hz)
         self.BANDS = [433e6, 915e6, 2.4e9, 5.8e9]
@@ -319,7 +321,23 @@ class JammerEnv(gym.Env):
             print(f"  [Reset] lambda2_initial={self.lambda2_initial:.4f}, enemy_band={self.enemy_band}, n_clusters={self.clusterer.n_clusters}")
         
         # Initialize jammer positions
-        if self.random_jammer_start:
+        if self.corner_start:
+            # Start jammers at CORNERS (worst possible positions for learning curves)
+            corners = np.array([
+                [0.05 * self.arena_size, 0.05 * self.arena_size],  # Bottom-left
+                [0.95 * self.arena_size, 0.05 * self.arena_size],  # Bottom-right
+                [0.05 * self.arena_size, 0.95 * self.arena_size],  # Top-left
+                [0.95 * self.arena_size, 0.95 * self.arena_size],  # Top-right
+                [0.05 * self.arena_size, 0.50 * self.arena_size],  # Mid-left
+                [0.95 * self.arena_size, 0.50 * self.arena_size],  # Mid-right
+            ])
+            # Use first M corners
+            self.jammer_positions = corners[:self.M].copy()
+            # Add small random noise
+            self.jammer_positions += self._rng.uniform(-5, 5, size=(self.M, 2))
+            self.jammer_positions = np.clip(self.jammer_positions, 0, self.arena_size)
+            self.jammer_assignments = {}  # No initial assignments
+        elif self.random_jammer_start:
             # Start at random positions - agent must learn to navigate
             self.jammer_positions = self._rng.uniform(
                 0.1 * self.arena_size, 0.9 * self.arena_size, size=(self.M, 2)

@@ -1,0 +1,12 @@
+{
+  "experiment_name": "learning_curve_10k",
+  "obs_dim": 5,
+  "hidden_dim": 128,
+  "v_max": 5.0,
+  "num_bands": 4,
+  "M": 6,
+  "N": 30,
+  "arena_size": 180.0,
+  "best_lambda2_reduction": 83.45688252666996,
+  "total_timesteps": 501760
+}

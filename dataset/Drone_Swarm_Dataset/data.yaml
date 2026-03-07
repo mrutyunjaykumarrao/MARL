@@ -1,0 +1,10 @@
+# Simuletic Drone Swarm Dataset Configuration. Supports YOLOv8 and YOLO11.
+
+path: .          
+train: images    
+val: images       
+
+
+nc: 1            
+names:
+  0: drone       
