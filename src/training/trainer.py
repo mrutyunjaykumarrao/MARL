@@ -153,7 +153,8 @@ class Trainer:
             omega_4=weights.get("energy", 0.1),
             omega_5=weights.get("overlap", 0.2),
             debug_mode=getattr(self.config, 'enable_debug_logging', False),
-            random_jammer_start=getattr(self.config.env, 'random_jammer_start', False)
+            random_jammer_start=getattr(self.config.env, 'random_jammer_start', False),
+            corner_start=getattr(self.config.env, 'corner_start', False)
         )
     
     def _create_agent(self):

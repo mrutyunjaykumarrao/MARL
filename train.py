@@ -50,9 +50,9 @@ Examples:
     parser.add_argument(
         "--mode",
         type=str,
-        choices=["debug", "fast", "full", "large"],
+        choices=["debug", "fast", "full", "large", "optimal"],
         default="fast",
-        help="Training mode preset (default: fast)"
+        help="Training mode preset (default: fast, use 'optimal' for 95%+ L2 reduction)"
     )
     
     parser.add_argument(
@@ -113,7 +113,8 @@ def get_config(args):
         get_debug_config,
         get_fast_config,
         get_full_config,
-        get_large_scale_config
+        get_large_scale_config,
+        get_optimal_config
     )
     
     # Load from file or preset
@@ -125,7 +126,8 @@ def get_config(args):
             "debug": get_debug_config,
             "fast": get_fast_config,
             "full": get_full_config,
-            "large": get_large_scale_config
+            "large": get_large_scale_config,
+            "optimal": get_optimal_config
         }
         config = config_map[args.mode]()
         print(f"Using preset: {args.mode}")

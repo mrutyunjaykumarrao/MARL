@@ -1,0 +1,18 @@
+{
+  "N": 30,
+  "M": 6,
+  "arena_size": 180,
+  "jam_thresh_dbm": -40,
+  "jammer_power_dbm": 30,
+  "max_steps": 200,
+  "num_scenarios": 100,
+  "scenario_types": {
+    "random": 30,
+    "clustered": 30,
+    "grid": 20,
+    "line": 10,
+    "edge": 10
+  },
+  "model_path": "outputs/learning_curve_10k/checkpoints/best/ppo_agent.pt",
+  "output_dir": "outputs/benchmark_evaluation"
+}

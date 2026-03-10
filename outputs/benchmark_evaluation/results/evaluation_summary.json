@@ -1,0 +1,34 @@
+{
+  "total_scenarios": 100,
+  "avg_lambda2_reduction": 50.27455762040803,
+  "avg_final_lambda2": 14.917632713877563,
+  "avg_reward": 96.20244848105204,
+  "disconnection_rate": 33.0,
+  "by_type": {
+    "random": {
+      "count": 30,
+      "avg_reduction": 47.87728056492169,
+      "avg_final_lambda2": 15.636815830523462
+    },
+    "clustered": {
+      "count": 30,
+      "avg_reduction": 44.66376135793841,
+      "avg_final_lambda2": 16.600871592618446
+    },
+    "grid": {
+      "count": 20,
+      "avg_reduction": 51.68851637723468,
+      "avg_final_lambda2": 14.493445086829567
+    },
+    "line": {
+      "count": 10,
+      "avg_reduction": 55.525218365956924,
+      "avg_final_lambda2": 13.342434490212895
+    },
+    "edge": {
+      "count": 10,
+      "avg_reduction": 66.2201993150737,
+      "avg_final_lambda2": 10.133940205477872
+    }
+  }
+}
