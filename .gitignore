@@ -51,3 +51,4 @@ Thumbs.db
 
 # Keep docs but ignore temp files
 *.tmp
+outputs/video_frames
