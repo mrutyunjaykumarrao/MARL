@@ -34,12 +34,12 @@ from scipy.spatial.distance import cdist
 # FAST (test run):  DPI=80,  FIG_W=12, FIG_H=6.75
 # MEDIUM (laptop):  DPI=100, FIG_W=16, FIG_H=9
 # HIGH (final):     DPI=150, FIG_W=16, FIG_H=9
-RENDER_DPI = 120          # dots per inch — higher = sharper but slower
+RENDER_DPI = 150          # dots per inch — higher = sharper but slower
 FPS        = 24
 TOTAL_SECS = 390          # 6.5 minutes — extended with new scenes
 TOTAL_FRAMES = FPS * TOTAL_SECS
 
-FIG_W, FIG_H = 16, 9     # 16:9 widescreen (1920x1080 at DPI=120)
+FIG_W, FIG_H = 16, 9     # 16:9 widescreen (1920x1080 at DPI=150)
 
 # Color palette
 BG        = '#0a0d1a'
@@ -49,11 +49,11 @@ JAMMER_C  = '#00ffdd'
 JAMMER_L  = '#0088ff'
 LINK_C    = '#ff6622'
 BROKEN_C  = '#441100'
-HUD_C     = '#88ccff'
+HUD_C     = '#aaddff'
 GOLD      = '#ffcc00'
 GREEN_C   = '#00ff88'
 TITLE_C   = '#ffffff'
-DIM       = '#334455'
+DIM       = '#667788'
 WARN_C    = '#ff4444'
 
 np.random.seed(42)
@@ -103,12 +103,13 @@ def draw_drone(ax, x, y, color, size=0.012, label=None, alpha=1.0):
     """Draw a drone as a small X shape."""
     s = size
     # Body
-    ax.plot([x-s, x+s], [y-s, y+s], color=color, lw=1.5, alpha=safe(alpha), solid_capstyle='round')
-    ax.plot([x-s, x+s], [y+s, y-s], color=color, lw=1.5, alpha=safe(alpha), solid_capstyle='round')
+    ax.plot([x-s, x+s], [y-s, y+s], color=color, lw=2.0, alpha=safe(alpha), solid_capstyle='round')
+    ax.plot([x-s, x+s], [y+s, y-s], color=color, lw=2.0, alpha=safe(alpha), solid_capstyle='round')
     # Center dot
-    ax.plot(x, y, 'o', color=color, ms=4, alpha=safe(alpha), zorder=5)
+    ax.plot(x, y, 'o', color=color, ms=5, alpha=safe(alpha), zorder=5)
     if label:
-        ax.text(x, y+0.025, label, color=color, fontsize=7, ha='center', alpha=safe(alpha))
+        ax.text(x, y+0.025, label, color=color, fontsize=9, ha='center', alpha=safe(alpha),
+                fontweight='bold')
 
 def draw_hud_box(ax, x, y, w, h, title, color=HUD_C, alpha=1.0):
     rect = FancyBboxPatch((x, y), w, h,
@@ -118,13 +119,13 @@ def draw_hud_box(ax, x, y, w, h, title, color=HUD_C, alpha=1.0):
                           zorder=8)
     ax.add_patch(rect)
     ax.text(x + w/2, y + h - 0.025, title,
-            color=color, fontsize=8, ha='center', va='top',
+            color=color, fontsize=10, ha='center', va='top',
             alpha=safe(alpha), zorder=9, fontweight='bold')
 
 def glow_text(ax, x, y, text, color, size=12, alpha=1.0, **kw):
     t = ax.text(x, y, text, color=color, fontsize=size, alpha=safe(alpha), **kw)
     t.set_path_effects([
-        pe.withStroke(linewidth=4, foreground=color, alpha=safe(alpha*0.3)),
+        pe.withStroke(linewidth=5, foreground=color, alpha=safe(alpha*0.4)),
     ])
     return t
 
@@ -212,7 +213,7 @@ def render_title(ax, t):
     ax.set_facecolor(BG)
     # Subtitle
     ax.text(0.5, 0.62, 'Multi-Agent Reinforcement Learning for',
-            color=HUD_C, fontsize=16, ha='center', va='center',
+            color=HUD_C, fontsize=18, ha='center', va='center',
             alpha=safe(a), transform=ax.transAxes)
     # Main title
     glow_text(ax, 0.5, 0.5, 'Enemy Drone Swarm\nCommunication Disruption',
@@ -222,16 +223,16 @@ def render_title(ax, t):
     # Tech tags
     tags = ['PPO Actor-Critic', '|', 'Graph Laplacian λ₂', '|', 'FSPL Jamming', '|', 'DBSCAN Clustering']
     ax.text(0.5, 0.32, '   '.join(tags),
-            color=HUD_C, fontsize=10, ha='center', va='center',
-            alpha=safe(a * 0.8), transform=ax.transAxes)
+            color=HUD_C, fontsize=12, ha='center', va='center',
+            alpha=safe(a * 0.9), transform=ax.transAxes)
     # Extending line
     line_w = ease(min(t * 3, 1.0))
     ax.plot([0.5 - 0.3*line_w, 0.5 + 0.3*line_w], [0.415, 0.415],
             color=JAMMER_C, lw=1.5, alpha=safe(a*0.7), transform=ax.transAxes)
     # Bottom tag
     ax.text(0.5, 0.12, 'Extending Valianti et al. — IEEE TMC, December 2024',
-            color=DIM, fontsize=9, ha='center', va='center',
-            alpha=safe(a * 0.7), transform=ax.transAxes, style='italic')
+            color=DIM, fontsize=10, ha='center', va='center',
+            alpha=safe(a * 0.9), transform=ax.transAxes, style='italic')
 
 
 def render_swarm_intro(ax, t):
@@ -241,7 +242,7 @@ def render_swarm_intro(ax, t):
 
     # Title
     ax.text(0.5, 0.95, 'THE THREAT: Coordinated Enemy Drone Swarm',
-            color=TITLE_C, fontsize=13, ha='center', va='top',
+            color=TITLE_C, fontsize=14, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Progressively show drones appearing
@@ -275,9 +276,9 @@ def render_swarm_intro(ax, t):
     if t > 0.7:
         box_a = ease((t - 0.7) / 0.2) * a
         ax.text(0.02, 0.06, f'N = {N_ENEMY} Enemy Drones', color=ENEMY_C,
-                fontsize=10, alpha=safe(box_a), transform=ax.transAxes)
+                fontsize=11, alpha=safe(box_a), transform=ax.transAxes, fontweight='bold')
         ax.text(0.02, 0.02, 'Status: FULLY COORDINATED', color=ENEMY_L,
-                fontsize=9, alpha=safe(box_a), transform=ax.transAxes)
+                fontsize=10, alpha=safe(box_a), transform=ax.transAxes)
 
     # Right side explanation
     if t > 0.5:
@@ -297,7 +298,7 @@ def render_swarm_intro(ax, t):
         for i, line in enumerate(lines):
             ax.text(0.72, 0.82 - i*0.072, line,
                     color=HUD_C if '●' in line else TITLE_C,
-                    fontsize=9, alpha=safe(exp_a), transform=ax.transAxes)
+                    fontsize=10, alpha=safe(exp_a), transform=ax.transAxes)
 
 
 def render_graph_build(ax, t):
@@ -306,7 +307,7 @@ def render_graph_build(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.95, 'MODELING THE SWARM AS A COMMUNICATION GRAPH  G = (V, E)',
-            color=TITLE_C, fontsize=11, ha='center', va='top',
+            color=TITLE_C, fontsize=12, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Show all drones
@@ -346,23 +347,23 @@ def render_graph_build(ax, t):
         # Column/row labels
         for k in range(n_mat):
             ax.text(mat_x0 + k*cell, mat_y0 + n_mat*cell, str(k+1),
-                    color=HUD_C, fontsize=6, ha='center', va='center', alpha=safe(mat_a*0.7))
+                    color=HUD_C, fontsize=7.5, ha='center', va='center', alpha=safe(mat_a*0.8))
 
     # FSPL formula
     if t > 0.55:
         fspl_a = ease((t - 0.55) / 0.2) * a
         draw_hud_box(ax, 0.62, 0.05, 0.34, 0.27, 'FSPL Edge Rule', alpha=safe(fspl_a))
         ax.text(0.79, 0.265, 'P_R(i,j) = P_tx × (c / 4πf·d_ij)²',
-                color=GOLD, fontsize=8.5, ha='center', alpha=safe(fspl_a),
+                color=GOLD, fontsize=10, ha='center', alpha=safe(fspl_a),
                 transform=ax.transAxes)
         ax.text(0.79, 0.215, 'Edge exists if:  P_R ≥ P_sens  AND  not jammed',
-                color=TITLE_C, fontsize=8, ha='center', alpha=safe(fspl_a),
+                color=TITLE_C, fontsize=9.5, ha='center', alpha=safe(fspl_a),
                 transform=ax.transAxes)
         ax.text(0.79, 0.165, 'P_sens = −90 dBm  |  f = 2.4 GHz default',
-                color=HUD_C, fontsize=7.5, ha='center', alpha=safe(fspl_a*0.8),
+                color=HUD_C, fontsize=9, ha='center', alpha=safe(fspl_a*0.9),
                 transform=ax.transAxes)
         ax.text(0.79, 0.115, 'Derived R_comm ≈ 86m  (not hardcoded)',
-                color=GREEN_C, fontsize=7.5, ha='center', alpha=safe(fspl_a*0.8),
+                color=GREEN_C, fontsize=9, ha='center', alpha=safe(fspl_a*0.9),
                 transform=ax.transAxes)
 
 
@@ -372,7 +373,7 @@ def render_lambda2(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.95, 'λ₂ — THE FIEDLER VALUE: ONE NUMBER TO MEASURE COORDINATION',
-            color=TITLE_C, fontsize=11, ha='center', va='top',
+            color=TITLE_C, fontsize=12, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Three state panels
@@ -413,7 +414,7 @@ def render_lambda2(ax, t):
             ax.plot(pt[0], pt[1], 'o', color=col2, ms=5, alpha=safe(panel_a))
 
         ax.text(px+0.12, py+0.34, label, color=col,
-                fontsize=9, ha='center', va='center', alpha=safe(panel_a),
+                fontsize=10, ha='center', va='center', alpha=safe(panel_a),
                 fontweight='bold', linespacing=1.3)
 
         # Box
@@ -430,7 +431,7 @@ def render_lambda2(ax, t):
                     arrowprops=dict(arrowstyle='->', color=JAMMER_C,
                                    lw=2.0, alpha=safe(arr_a)))
         ax.text(0.38, 0.32, 'OUR MISSION: Drive λ₂ → 0',
-                color=JAMMER_C, fontsize=11, ha='center', alpha=safe(arr_a),
+                color=JAMMER_C, fontsize=12, ha='center', alpha=safe(arr_a),
                 fontweight='bold')
 
     # Theory box
@@ -439,10 +440,10 @@ def render_lambda2(ax, t):
         draw_hud_box(ax, 0.05, 0.04, 0.9, 0.14,
                      'Fiedler Theorem (1973)', color=GOLD, alpha=safe(th_a))
         ax.text(0.5, 0.135, 'λ₂ > 0  ⟺  Graph is connected  ⟺  Swarm CAN coordinate globally',
-                color=GOLD, fontsize=10, ha='center', alpha=safe(th_a),
+                color=GOLD, fontsize=11, ha='center', alpha=safe(th_a),
                 transform=ax.transAxes)
         ax.text(0.5, 0.09, 'λ₂ = 0  ⟺  Graph is disconnected  ⟺  Swarm CANNOT coordinate  (Proposition 1)',
-                color=GREEN_C, fontsize=10, ha='center', alpha=safe(th_a),
+                color=GREEN_C, fontsize=11, ha='center', alpha=safe(th_a),
                 transform=ax.transAxes, fontweight='bold')
 
 
@@ -452,42 +453,61 @@ def render_dbscan(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.95, 'DBSCAN CLUSTERING — Intelligent Jammer Deployment',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
-    # Show enemy drones
-    for p in enemy_pos:
-        draw_drone(ax, p[0]*0.58 + 0.03, p[1]*0.75 + 0.12, ENEMY_C, alpha=safe(a))
+    # Scale factors for drone positioning
+    sx, sy, ox, oy = 0.55, 0.72, 0.05, 0.14
 
     cluster_colors = ['#ff9900', '#aa44ff', '#44ffaa']
-    radii = [0.12, 0.12, 0.10]
 
-    # Progressively show cluster circles
-    for k, (c, col, r) in enumerate(zip(cluster_centers, cluster_colors, radii)):
-        circ_t = max(0, (t - 0.25 - k*0.18) / 0.15)
+    # Compute actual bounding radius for each cluster from the enemy positions
+    cluster_assignments = [list(range(0,7)), list(range(7,14)), list(range(14,20))]
+    cluster_radii_actual = []
+    for k, indices in enumerate(cluster_assignments):
+        c = cluster_centers[k]
+        max_d = 0
+        for idx in indices:
+            d = np.linalg.norm(enemy_pos[idx] - c)
+            if d > max_d:
+                max_d = d
+        cluster_radii_actual.append(max_d + 0.04)  # add padding
+
+    # Progressively show cluster circles (BEHIND drones)
+    from matplotlib.patches import Ellipse
+    for k, (c, col, r) in enumerate(zip(cluster_centers, cluster_colors, cluster_radii_actual)):
+        circ_t = max(0, (t - 0.25 - k*0.15) / 0.15)
         circ_a = ease(min(circ_t, 1.0)) * a
         if circ_a <= 0:
             continue
-        cx = c[0]*0.58 + 0.03
-        cy = c[1]*0.75 + 0.12
-        circle = Circle((cx, cy), r*0.58,
-                        fill=True, facecolor=col,
-                        edgecolor=col, lw=2, alpha=safe(circ_a*0.15))
-        ax.add_patch(circle)
-        circle2 = Circle((cx, cy), r*0.58,
-                         fill=False, edgecolor=col, lw=2, alpha=safe(circ_a*0.6))
-        ax.add_patch(circle2)
+        cx = c[0]*sx + ox
+        cy = c[1]*sy + oy
+        # Use Ellipse to account for 16:9 aspect ratio
+        ew = r * sx * 2.2
+        eh = r * sy * 2.2
+        ellipse = Ellipse((cx, cy), ew, eh,
+                          fill=True, facecolor=col,
+                          edgecolor=col, lw=2.5, alpha=safe(circ_a*0.2), zorder=1)
+        ax.add_patch(ellipse)
+        ellipse2 = Ellipse((cx, cy), ew, eh,
+                           fill=False, edgecolor=col, lw=2.5, alpha=safe(circ_a*0.7), zorder=2)
+        ax.add_patch(ellipse2)
 
         # Centroid marker
-        cent_a = ease(max(0, (t - 0.4 - k*0.18) / 0.15)) * a
-        ax.plot(cx, cy, '+', color=col, ms=12, mew=2, alpha=safe(cent_a))
-        ax.text(cx, cy+r*0.58+0.02, f'Cluster {k+1}', color=col,
-                fontsize=8, ha='center', alpha=safe(cent_a))
+        cent_a = ease(max(0, (t - 0.4 - k*0.15) / 0.15)) * a
+        ax.plot(cx, cy, '+', color=col, ms=14, mew=2.5, alpha=safe(cent_a), zorder=4)
+        ax.text(cx + ew/2 + 0.02, cy, f'Cluster {k+1}', color=col,
+                fontsize=10, ha='left', va='center', alpha=safe(cent_a),
+                fontweight='bold', zorder=10)
+
+    # Show enemy drones (ON TOP of clusters)
+    for p in enemy_pos:
+        draw_drone(ax, p[0]*sx + ox, p[1]*sy + oy, ENEMY_C, alpha=safe(a))
 
     # Right panel explanation
     if t > 0.5:
         exp_a = ease((t - 0.5) / 0.2) * a
-        draw_hud_box(ax, 0.65, 0.3, 0.32, 0.5, 'DBSCAN Config', alpha=safe(exp_a))
+        draw_hud_box(ax, 0.65, 0.25, 0.32, 0.55, 'DBSCAN Config', alpha=safe(exp_a))
         lines = [
             ('eps = 30m', GOLD),
             ('min_samples = 2', GOLD),
@@ -500,15 +520,15 @@ def render_dbscan(ax, t):
             ('Re-runs every 10 steps', HUD_C),
         ]
         for i, (line, col) in enumerate(lines):
-            ax.text(0.81, 0.745 - i*0.045, line,
-                    color=col, fontsize=8.5, ha='center',
+            ax.text(0.81, 0.73 - i*0.048, line,
+                    color=col, fontsize=10, ha='center',
                     alpha=safe(exp_a), transform=ax.transAxes)
 
     # Bottom key insight
     if t > 0.75:
         ins_a = ease((t - 0.75) / 0.2) * a
         ax.text(0.5, 0.045, '2× faster convergence vs random initialization  (ablation result)',
-                color=GREEN_C, fontsize=10, ha='center', alpha=safe(ins_a),
+                color=GREEN_C, fontsize=11, ha='center', alpha=safe(ins_a),
                 transform=ax.transAxes, style='italic')
 
 
@@ -518,7 +538,7 @@ def render_deploy(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.95, 'JAMMER DEPLOYMENT — 4 Teal Agents Deploying to Cluster Centroids',
-            color=TITLE_C, fontsize=11, ha='center', va='top',
+            color=TITLE_C, fontsize=12, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Enemy drones (static)
@@ -573,13 +593,13 @@ def render_deploy(ax, t):
     if t > 0.8:
         st_a = ease((t - 0.8)/0.15) * a
         ax.text(0.65, 0.25, f'M = {M_JAMMER} Jammer Agents', color=JAMMER_C,
-                fontsize=11, alpha=safe(st_a), transform=ax.transAxes, fontweight='bold')
+                fontsize=12, alpha=safe(st_a), transform=ax.transAxes, fontweight='bold')
         ax.text(0.65, 0.19, 'Deployment: COMPLETE', color=GREEN_C,
-                fontsize=10, alpha=safe(st_a), transform=ax.transAxes)
+                fontsize=11, alpha=safe(st_a), transform=ax.transAxes)
         ax.text(0.65, 0.13, 'Architecture: CTDE', color=HUD_C,
-                fontsize=9, alpha=safe(st_a), transform=ax.transAxes)
+                fontsize=10, alpha=safe(st_a), transform=ax.transAxes)
         ax.text(0.65, 0.07, '(Centralized Train / Decentralized Execute)', color=HUD_C,
-                fontsize=8, alpha=safe(st_a*0.8), transform=ax.transAxes, style='italic')
+                fontsize=9, alpha=safe(st_a*0.9), transform=ax.transAxes, style='italic')
 
 
 def render_obs_vector(ax, t):
@@ -587,30 +607,30 @@ def render_obs_vector(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'AGENT OBSERVATION — The 5 Numbers Every Jammer Uses',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Central jammer
-    ax.plot(0.5, 0.52, 'o', color=JAMMER_C, ms=14, alpha=safe(a), zorder=5)
-    ax.text(0.5, 0.52, 'J', color=BG, fontsize=9, ha='center', va='center',
+    ax.plot(0.5, 0.52, 'o', color=JAMMER_C, ms=16, alpha=safe(a), zorder=5)
+    ax.text(0.5, 0.52, 'J', color=BG, fontsize=10, ha='center', va='center',
             alpha=safe(a), zorder=6, fontweight='bold')
-    ax.text(0.5, 0.46, 'JAMMER', color=JAMMER_C, fontsize=9,
-            ha='center', alpha=safe(a), transform=ax.transAxes)
+    ax.text(0.5, 0.46, 'JAMMER', color=JAMMER_C, fontsize=10,
+            ha='center', alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     obs = [
-        (0.20, 0.78, '[0] dist_to_centroid',
+        (0.18, 0.78, '[0] dist_to_centroid',
          'Distance to nearest\ncluster center / arena_size',
          'Am I in position?', GOLD),
-        (0.05, 0.52, '[1] cluster_density',
+        (0.03, 0.52, '[1] cluster_density',
          'Fraction of enemies\nin my assigned cluster',
          'How important\nis my cluster?', '#aa44ff'),
-        (0.20, 0.26, '[2] dist_to_others',
+        (0.18, 0.24, '[2] dist_to_others',
          'Mean distance to\nother jammer agents',
          'Am I isolated\nor overcrowded?', '#ff9900'),
-        (0.75, 0.26, '[3] coverage_overlap',
+        (0.73, 0.24, '[3] coverage_overlap',
          'Fraction of jammer pairs\noverlapping my jamming zone',
          'Wasting coverage\nwith a teammate?', ENEMY_C),
-        (0.78, 0.78, '[4] band_match',
+        (0.76, 0.78, '[4] band_match',
          'Binary: is my current\nfrequency = enemy frequency?',
          'Am I actually\njamming right now?', GREEN_C),
     ]
@@ -624,24 +644,24 @@ def render_obs_vector(ax, t):
         ax.annotate('', xy=(ox+0.1, oy),
                     xytext=(0.5, 0.52),
                     arrowprops=dict(arrowstyle='->', color=col,
-                                   lw=1.2, alpha=safe(item_a*0.6),
+                                   lw=1.5, alpha=safe(item_a*0.7),
                                    connectionstyle='arc3,rad=0.1'))
 
-        draw_hud_box(ax, ox-0.02, oy-0.06, 0.24, 0.16, '', color=col, alpha=safe(item_a))
-        ax.text(ox+0.10, oy+0.06, label, color=col,
-                fontsize=8, ha='center', alpha=safe(item_a), fontweight='bold')
-        ax.text(ox+0.10, oy+0.01, desc, color=TITLE_C,
-                fontsize=7, ha='center', alpha=safe(item_a), linespacing=1.3)
-        ax.text(ox+0.10, oy-0.045, why, color=col,
-                fontsize=7, ha='center', alpha=safe(item_a*0.8),
-                style='italic', linespacing=1.2)
+        draw_hud_box(ax, ox-0.02, oy-0.07, 0.25, 0.18, '', color=col, alpha=safe(item_a))
+        ax.text(ox+0.105, oy+0.07, label, color=col,
+                fontsize=9.5, ha='center', alpha=safe(item_a), fontweight='bold', zorder=10)
+        ax.text(ox+0.105, oy+0.01, desc, color=TITLE_C,
+                fontsize=8.5, ha='center', alpha=safe(item_a), linespacing=1.3, zorder=10)
+        ax.text(ox+0.105, oy-0.05, why, color=col,
+                fontsize=8, ha='center', alpha=safe(item_a*0.9),
+                style='italic', linespacing=1.2, zorder=10)
 
     # Key property
     if t > 0.85:
         kp_a = ease((t - 0.85)/0.12) * a
         ax.text(0.5, 0.055, 'All 5 values clipped to [0, 1]  ●  Fixed size regardless of N or M  ●  This IS the scalability',
-                color=GREEN_C, fontsize=9.5, ha='center', alpha=safe(kp_a),
-                transform=ax.transAxes)
+                color=GREEN_C, fontsize=10.5, ha='center', alpha=safe(kp_a),
+                transform=ax.transAxes, fontweight='bold')
 
 
 def render_neural_net(ax, t):
@@ -649,84 +669,114 @@ def render_neural_net(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'ACTOR NETWORK — Turning 5 Numbers Into Actions',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
-    # Network layout
+    # Network architecture: Input(5) -> Hidden(128) -> Hidden(128) -> Output(6)
     layers = [
-        (5, 'Input\n5D obs', HUD_C),
-        (8, 'Hidden\n128', JAMMER_C),
-        (8, 'Hidden\n128', JAMMER_C),
-        (6, 'Output', GOLD),
+        (5, 'Input (5D obs)', HUD_C),
+        (8, 'Hidden (128)', JAMMER_C),
+        (8, 'Hidden (128)', JAMMER_C),
+        (6, 'Output (3 actions)', GOLD),
     ]
 
-    layer_xs = [0.18, 0.35, 0.52, 0.70]
-    layer_spacing = [0.14, 0.1, 0.1, 0.1]
-    node_positions = []
+    # Spread layers across the screen width (axes fraction coords)
+    layer_xs = [0.14, 0.36, 0.56, 0.76]
 
+    # Compute node positions (all in axes fraction coordinates)
+    node_positions = []
     for li, (n_nodes, label, col) in enumerate(layers):
         x = layer_xs[li]
-        ys = np.linspace(0.5 - (n_nodes-1)*layer_spacing[li]/2,
-                         0.5 + (n_nodes-1)*layer_spacing[li]/2,
-                         n_nodes)
-        node_positions.append(list(zip([x]*n_nodes, ys)))
+        total_h = 0.58 if n_nodes >= 8 else 0.50
+        ys = np.linspace(0.52 - total_h / 2, 0.52 + total_h / 2, n_nodes)
+        node_positions.append([(x, y) for y in ys])
 
-        # Draw connections to previous layer
-        if li > 0:
-            conn_a = ease(max(0, (t - 0.1 - li*0.15)/0.15)) * a
-            for (x1, y1) in node_positions[li-1]:
-                for (x2, y2) in zip([x]*n_nodes, ys):
-                    ax.plot([x1, x2], [y1, y2],
-                            color=col, lw=0.5, alpha=alpha_clamp(conn_a * 0.3))
+    # Progressive appearance timing — layers never disappear
+    layer_appear_t = [0.0, 0.12, 0.28, 0.44]
 
-        node_a = ease(max(0, (t - li*0.15)/0.15)) * a
-        for y in ys:
-            circle = Circle((x, y), 0.018, color=col, alpha=safe(node_a*0.8))
-            ax.add_patch(circle)
+    # ---------- Connections (drawn FIRST, behind nodes) ----------
+    for li in range(1, len(layers)):
+        _, _, col = layers[li]
+        conn_start = layer_appear_t[li]
+        conn_progress = ease(max(0, min((t - conn_start) / 0.12, 1.0)))
+        conn_a = conn_progress * a
+        if conn_a <= 0:
+            continue
+        # Dim connections of previous layers slightly when newer layers appear
+        if li < len(layers) - 1:
+            next_t = layer_appear_t[li + 1] + 0.10
+            conn_dim = 1.0 - 0.25 * ease(max(0, min((t - next_t) / 0.12, 1.0)))
+        else:
+            conn_dim = 1.0
+        for (x1, y1) in node_positions[li - 1]:
+            for (x2, y2) in node_positions[li]:
+                ax.plot([x1, x2], [y1, y2],
+                        color=col, lw=0.6,
+                        alpha=safe(conn_a * conn_dim * 0.35),
+                        zorder=2, transform=ax.transAxes)
 
-        ax.text(x, 0.17, label, color=col, fontsize=8,
-                ha='center', alpha=safe(node_a), linespacing=1.3)
+    # ---------- Nodes (drawn ON TOP using markers — always circular) ----------
+    for li, (n_nodes, label, col) in enumerate(layers):
+        appear_a = ease(max(0, min((t - layer_appear_t[li]) / 0.10, 1.0)))
+        # Dim previous layers slightly but NEVER below 0.55
+        if li < len(layers) - 1:
+            next_t = layer_appear_t[li + 1] + 0.10
+            dim = 1.0 - 0.30 * ease(max(0, min((t - next_t) / 0.12, 1.0)))
+        else:
+            dim = 1.0
+        node_a = appear_a * dim * a
+        if node_a <= 0:
+            continue
 
-    # Activation wave
-    if t > 0.5:
-        wave_t = (t - 0.5) * 3.0
-        wave_x = lerp(layer_xs[0], layer_xs[-1], wave_t % 1.0)
-        wave_a = (1 - (wave_t % 1.0)) * a * 0.7
-        ax.axvline(wave_x, color=GOLD, lw=2, alpha=safe(wave_a), linestyle='--')
+        for (x, y) in node_positions[li]:
+            # Use plot markers (screen-space sizing, always circular)
+            ax.plot(x, y, 'o', color=col, ms=14,
+                    alpha=safe(node_a * 0.95), zorder=5,
+                    markeredgecolor='white', markeredgewidth=0.3,
+                    transform=ax.transAxes)
 
-    # Output labels
-    if t > 0.6:
-        out_a = ease((t - 0.6)/0.15) * a
+        # Layer label below the nodes
+        ax.text(layer_xs[li], 0.14, label, color=col, fontsize=10,
+                ha='center', va='center', alpha=safe(node_a),
+                transform=ax.transAxes, fontweight='bold', zorder=10)
+
+    # ---------- Data flow indicator (subtle pulse moving L→R) ----------
+    if 0.50 < t < 0.90:
+        wave_t = (t - 0.50) / 0.40
+        wave_x = lerp(layer_xs[0], layer_xs[-1], wave_t)
+        wave_a = (1 - wave_t) * a * 0.3
+        ax.plot([wave_x, wave_x], [0.18, 0.85], color=GOLD, lw=1.5,
+                alpha=safe(wave_a), linestyle='--', zorder=3,
+                transform=ax.transAxes)
+
+    # ---------- Output labels ----------
+    if t > 0.55:
+        out_a = ease(min((t - 0.55) / 0.12, 1.0)) * a
         out_ys = [y for _, y in node_positions[-1]]
         labels_out = ['Vx →', 'Vy →', '', '433MHz', '915MHz', '2.4GHz']
         colors_out = [JAMMER_C, JAMMER_C, JAMMER_C, HUD_C, HUD_C, GREEN_C]
-        for k, (y, lab, col) in enumerate(zip(out_ys, labels_out, colors_out)):
-            ax.text(0.77, y, lab, color=col, fontsize=8,
-                    va='center', alpha=safe(out_a))
+        for y, lab, col in zip(out_ys, labels_out, colors_out):
+            if lab:
+                ax.text(0.82, y, lab, color=col, fontsize=10,
+                        va='center', alpha=safe(out_a), fontweight='bold',
+                        zorder=10, transform=ax.transAxes)
 
-        # Output labels
-        ax.text(0.88, 0.65, 'VELOCITY\n(Continuous)', color=JAMMER_C,
-                fontsize=8, ha='center', alpha=safe(out_a), linespacing=1.3,
-                transform=ax.transAxes)
-        ax.text(0.88, 0.38, 'BAND\n(Discrete)', color=GREEN_C,
-                fontsize=8, ha='center', alpha=safe(out_a), linespacing=1.3,
-                transform=ax.transAxes)
+        ax.text(0.91, 0.70, 'VELOCITY\n(Continuous)', color=JAMMER_C,
+                fontsize=10, ha='center', alpha=safe(out_a), linespacing=1.3,
+                transform=ax.transAxes, fontweight='bold')
+        ax.text(0.91, 0.34, 'BAND\n(Discrete)', color=GREEN_C,
+                fontsize=10, ha='center', alpha=safe(out_a), linespacing=1.3,
+                transform=ax.transAxes, fontweight='bold')
 
-    # Parameter sharing callout
-    if t > 0.75:
-        ps_a = ease((t - 0.75)/0.15) * a
-        draw_hud_box(ax, 0.02, 0.04, 0.45, 0.14, 'Parameter Sharing', color=GOLD, alpha=safe(ps_a))
-        ax.text(0.24, 0.115, 'All M jammers share ONE Actor network', color=GOLD,
-                fontsize=9, ha='center', alpha=safe(ps_a), transform=ax.transAxes)
-        ax.text(0.24, 0.073, 'Each uses its OWN local 5D observation', color=TITLE_C,
-                fontsize=8.5, ha='center', alpha=safe(ps_a), transform=ax.transAxes)
-
-    # LayerNorm note
-    if t > 0.8:
-        ln_a = ease((t - 0.8)/0.12) * a
-        ax.text(0.35, 0.09, 'LayerNorm after each hidden layer\n(stable with variable batch sizes)',
-                color=HUD_C, fontsize=8, ha='center', alpha=safe(ln_a),
-                transform=ax.transAxes, linespacing=1.3)
+    # ---------- Parameter sharing callout ----------
+    if t > 0.72:
+        ps_a = ease(min((t - 0.72) / 0.12, 1.0)) * a
+        draw_hud_box(ax, 0.02, 0.02, 0.50, 0.10, 'Parameter Sharing',
+                     color=GOLD, alpha=safe(ps_a))
+        ax.text(0.27, 0.09, 'All M jammers share ONE Actor network', color=GOLD,
+                fontsize=10, ha='center', alpha=safe(ps_a), transform=ax.transAxes)
+        ax.text(0.27, 0.055, 'Each uses its OWN local 5D observation', color=TITLE_C,
+                fontsize=9.5, ha='center', alpha=safe(ps_a), transform=ax.transAxes)
 
 
 def render_reward(ax, t):
@@ -751,39 +801,39 @@ def render_reward(ax, t):
     ]
 
     for i, (weight, name, formula, role, col, w, direction) in enumerate(terms):
-        item_a = ease(max(0, (t - 0.1 - i*0.13)/0.13)) * a
+        item_a = ease(max(0, (t - 0.04 - i*0.11)/0.11)) * a
         if item_a <= 0: continue
 
         y0 = 0.82 - i * 0.145
-        bar_w = w * 0.25
+        bar_w = w * 0.18
 
-        draw_hud_box(ax, 0.02, y0, 0.94, 0.12, '', color=col, alpha=safe(item_a*0.7))
+        draw_hud_box(ax, 0.02, y0, 0.92, 0.12, '', color=col, alpha=safe(item_a*0.7))
 
-        ax.text(0.055, y0+0.075, weight, color=col, fontsize=10,
+        ax.text(0.055, y0+0.075, weight, color=col, fontsize=11,
                 va='center', alpha=safe(item_a), fontweight='bold',
                 transform=ax.transAxes)
-        ax.text(0.16, y0+0.075, name, color=TITLE_C, fontsize=10,
+        ax.text(0.16, y0+0.075, name, color=TITLE_C, fontsize=11,
                 va='center', alpha=safe(item_a), fontweight='bold',
                 transform=ax.transAxes)
-        ax.text(0.43, y0+0.075, formula, color=GOLD, fontsize=8.5,
+        ax.text(0.42, y0+0.075, formula, color=GOLD, fontsize=9.5,
                 va='center', alpha=safe(item_a), transform=ax.transAxes)
-        ax.text(0.70, y0+0.075, role, color=HUD_C, fontsize=8,
+        ax.text(0.68, y0+0.075, role, color=HUD_C, fontsize=9.5,
                 va='center', alpha=safe(item_a), transform=ax.transAxes)
 
-        # Bar
-        rect = patches.Rectangle((0.935, y0+0.025), bar_w, 0.07,
-                                  color=col, alpha=safe(item_a*0.6),
+        # Bar (clamped to fit within frame)
+        rect = patches.Rectangle((0.88, y0+0.025), bar_w, 0.07,
+                                  color=col, alpha=safe(item_a*0.7),
                                   transform=ax.transAxes)
         ax.add_patch(rect)
-        ax.text(0.958, y0+0.075, direction, color=col, fontsize=9,
-                va='center', alpha=safe(item_a), transform=ax.transAxes,
+        ax.text(0.895, y0+0.075, direction, color=TITLE_C, fontsize=11,
+                va='center', ha='center', alpha=safe(item_a), transform=ax.transAxes,
                 fontweight='bold')
 
     # Total reward
     if t > 0.85:
         tot_a = ease((t - 0.85)/0.12) * a
         ax.text(0.5, 0.058, 'R(t)  =  ω₁·(λ₂ reduction)  +  ω₂·(band)  +  ω₃·(proximity)  −  ω₄·(energy)  −  ω₅·(overlap)',
-                color=GOLD, fontsize=10, ha='center', alpha=safe(tot_a),
+                color=GOLD, fontsize=11, ha='center', alpha=safe(tot_a),
                 transform=ax.transAxes, fontweight='bold')
 
 
@@ -792,7 +842,7 @@ def render_training(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'PPO TRAINING — Learning Over Thousands of Episodes',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Simulated training curves
@@ -842,26 +892,26 @@ def render_training(ax, t):
         ys_norm = (ys - ys.min()) / y_range * plot_h + plot_y0
         xs_norm = xs / xs.max() * plot_w + plot_x0
 
-        ax.plot(xs_norm[:n_show], ys_norm[:n_show], color=col, lw=1.5, alpha=safe(a*0.9))
+        ax.plot(xs_norm[:n_show], ys_norm[:n_show], color=col, lw=2.0, alpha=safe(a*0.95))
 
         # Y labels
-        ax.text(plot_x0-0.01, plot_y0, ymin_l, color=col, fontsize=6,
-                ha='right', va='center', alpha=safe(a*0.7))
-        ax.text(plot_x0-0.01, plot_y0+plot_h, ymax_l, color=col, fontsize=6,
-                ha='right', va='center', alpha=safe(a*0.7))
+        ax.text(plot_x0-0.01, plot_y0, ymin_l, color=col, fontsize=8,
+                ha='right', va='center', alpha=safe(a*0.8))
+        ax.text(plot_x0-0.01, plot_y0+plot_h, ymax_l, color=col, fontsize=8,
+                ha='right', va='center', alpha=safe(a*0.8))
 
     # 70% target line on lambda2 plot
     targ_y = 0.52 + 0.07 + (70/80) * 0.27
     ax.plot([0.54, 0.94], [targ_y, targ_y], color=WARN_C,
-            lw=1.2, alpha=safe(a*0.7), linestyle='--')
+            lw=1.5, alpha=safe(a*0.8), linestyle='--')
     ax.text(0.955, targ_y, '70%\nTarget', color=WARN_C,
-            fontsize=6.5, va='center', alpha=safe(a*0.7), transform=ax.transAxes)
+            fontsize=8, va='center', alpha=safe(a*0.8), transform=ax.transAxes)
 
     # Status
     if t > 0.85:
         st_a = ease((t - 0.85)/0.12) * a
         ax.text(0.5, 0.038, '≥ 70% λ₂ reduction achieved at ~300K–500K timesteps  ●  Training: CONVERGED ✓',
-                color=GREEN_C, fontsize=10, ha='center', alpha=safe(st_a),
+                color=GREEN_C, fontsize=11, ha='center', alpha=safe(st_a),
                 transform=ax.transAxes, fontweight='bold')
 
 
@@ -871,7 +921,7 @@ def render_jamming(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.95, 'JAMMING IN ACTION — Links Breaking, λ₂ Falling',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # How many links have broken
@@ -941,8 +991,8 @@ def render_jamming(ax, t):
     if t > 0.3:
         bc_a = ease((t-0.3)/0.15)*a
         ax.text(0.80, 0.575, f'Links broken: {n_break} / {len(all_links)}',
-                color=WARN_C, fontsize=9, ha='center', alpha=safe(bc_a),
-                transform=ax.transAxes)
+                color=WARN_C, fontsize=10, ha='center', alpha=safe(bc_a),
+                transform=ax.transAxes, fontweight='bold')
 
 
 def render_fragmentation(ax, t):
@@ -951,7 +1001,7 @@ def render_fragmentation(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.95, '⚡ MISSION COMPLETE — λ₂ = 0 — SWARM FULLY FRAGMENTED',
-            color=GREEN_C, fontsize=12, ha='center', va='top',
+            color=GREEN_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Shockwave effect
@@ -991,10 +1041,10 @@ def render_fragmentation(ax, t):
     if t > 0.35:
         frag_a = ease((t-0.35)/0.15) * a
         ax.text(0.80, 0.595, '● SWARM FRAGMENTED', color=GREEN_C,
-                fontsize=11, ha='center', alpha=safe(frag_a),
+                fontsize=12, ha='center', alpha=safe(frag_a),
                 transform=ax.transAxes, fontweight='bold')
         ax.text(0.80, 0.548, 'Proposition 1: SATISFIED ✓', color=GOLD,
-                fontsize=10, ha='center', alpha=safe(frag_a),
+                fontsize=11, ha='center', alpha=safe(frag_a),
                 transform=ax.transAxes)
 
     # Proposition box
@@ -1012,7 +1062,7 @@ def render_fragmentation(ax, t):
         for i, line in enumerate(lines):
             col = GOLD if i < 2 else (TITLE_C if i < 3 else GREEN_C)
             ax.text(0.795, 0.375 - i*0.055, line, color=col,
-                    fontsize=8.5, ha='center', alpha=safe(prop_a),
+                    fontsize=9.5, ha='center', alpha=safe(prop_a),
                     transform=ax.transAxes,
                     fontweight='bold' if i == 4 else 'normal')
 
@@ -1022,7 +1072,7 @@ def render_comparison(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'BASELINE COMPARISON — How We Outperform All Methods',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     methods = [
@@ -1057,31 +1107,31 @@ def render_comparison(ax, t):
         # Name
         ax.text(bar_x0 - 0.01, y + bar_h/2, name,
                 color=col if ours else TITLE_C,
-                fontsize=9, ha='right', va='center',
+                fontsize=10, ha='right', va='center',
                 alpha=safe(item_a), transform=ax.transAxes,
                 fontweight='bold' if ours else 'normal')
 
         # Value
         ax.text(bar_x0 + bar_w + 0.01, y + bar_h/2,
-                f'{val}%', color=col, fontsize=9,
+                f'{val}%', color=col, fontsize=10,
                 ha='left', va='center', alpha=safe(item_a),
                 transform=ax.transAxes, fontweight='bold' if ours else 'normal')
 
         if ours:
             ax.text(bar_x0 + bar_w + 0.05, y + bar_h/2, '← OUR WORK',
-                    color=col, fontsize=8, ha='left', va='center',
-                    alpha=safe(item_a*0.8), transform=ax.transAxes, style='italic')
+                    color=col, fontsize=9, ha='left', va='center',
+                    alpha=safe(item_a*0.9), transform=ax.transAxes, style='italic')
 
     # 70% target line
     tx = bar_x0 + 0.70 * max_bar_w
     ax.plot([tx, tx], [0.08, 0.94], color=WARN_C, lw=1.5,
         alpha=safe(a*0.7), linestyle='--', transform=ax.transAxes)
-    ax.text(tx+0.005, 0.09, '70%\nTarget', color=WARN_C, fontsize=7.5,
-            va='bottom', alpha=safe(a*0.8), transform=ax.transAxes)
+    ax.text(tx+0.005, 0.09, '70%\nTarget', color=WARN_C, fontsize=8.5,
+            va='bottom', alpha=safe(a*0.9), transform=ax.transAxes)
 
     # X axis label
     ax.text(0.635, 0.04, 'Mean λ₂ Reduction %', color=HUD_C,
-            fontsize=9, ha='center', alpha=safe(a*0.8),
+            fontsize=10, ha='center', alpha=safe(a*0.9),
             transform=ax.transAxes)
 
 
@@ -1090,7 +1140,7 @@ def render_proposition(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'PROPOSITION 1 — The Theoretical Backbone',
-            color=GOLD, fontsize=13, ha='center', va='top',
+            color=GOLD, fontsize=14, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # Three-step visual proof
@@ -1137,9 +1187,9 @@ def render_proposition(ax, t):
             circle = Circle((px, py), 0.018, color=node_col, alpha=safe(step_a*0.9))
             ax.add_patch(circle)
 
-        ax.text(ox+0.12, 0.73, step_label, color=col, fontsize=10,
+        ax.text(ox+0.12, 0.73, step_label, color=col, fontsize=11,
                 ha='center', alpha=safe(step_a), fontweight='bold')
-        ax.text(ox+0.12, 0.27, desc, color=TITLE_C, fontsize=8.5,
+        ax.text(ox+0.12, 0.27, desc, color=TITLE_C, fontsize=9.5,
                 ha='center', alpha=safe(step_a), linespacing=1.4)
 
         # Arrows between steps
@@ -1153,13 +1203,13 @@ def render_proposition(ax, t):
         th_a = ease((t-0.65)/0.2) * a
         draw_hud_box(ax, 0.05, 0.05, 0.9, 0.16, '', color=GOLD, alpha=safe(th_a))
         ax.text(0.5, 0.165, 'Fiedler (1973): λ₂(G) = 0  ⟺  G is disconnected',
-                color=GOLD, fontsize=12, ha='center', alpha=safe(th_a),
+                color=GOLD, fontsize=13, ha='center', alpha=safe(th_a),
                 transform=ax.transAxes, fontweight='bold')
         ax.text(0.5, 0.105, 'Our reward directly optimizes the EXACT condition for swarm fragmentation — not a proxy metric.',
-                color=TITLE_C, fontsize=9.5, ha='center', alpha=safe(th_a),
+                color=TITLE_C, fontsize=10.5, ha='center', alpha=safe(th_a),
                 transform=ax.transAxes)
         ax.text(0.5, 0.058, 'This answers the key reviewer question: "Why λ₂ and not jamming power?"',
-                color=GREEN_C, fontsize=9, ha='center', alpha=safe(th_a),
+                color=GREEN_C, fontsize=10, ha='center', alpha=safe(th_a),
                 transform=ax.transAxes, style='italic')
 
 
@@ -1168,7 +1218,7 @@ def render_results(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'KEY RESULTS — What Our System Achieves',
-            color=TITLE_C, fontsize=13, ha='center', va='top',
+            color=TITLE_C, fontsize=14, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     results = [
@@ -1188,9 +1238,9 @@ def render_results(ax, t):
         y = 0.845 - i * 0.088
 
         draw_hud_box(ax, 0.05, y, 0.88, 0.072, '', color=col, alpha=safe(item_a*0.6))
-        ax.text(0.10, y+0.043, label, color=TITLE_C, fontsize=9.5,
+        ax.text(0.10, y+0.043, label, color=TITLE_C, fontsize=10.5,
                 va='center', alpha=safe(item_a), transform=ax.transAxes)
-        glow_text(ax, 0.82, y+0.043, val, col, size=11,
+        glow_text(ax, 0.82, y+0.043, val, col, size=12,
                   alpha=safe(item_a), ha='center', va='center',
                   transform=ax.transAxes, fontweight='bold')
 
@@ -1214,8 +1264,8 @@ def render_outro(ax, t):
                  transform=ax.transAxes)
     ax.add_patch(ring)
 
-    ax.text(0.5, 0.75, 'SYSTEM SUMMARY', color=HUD_C, fontsize=12,
-            ha='center', alpha=safe(a), transform=ax.transAxes)
+    ax.text(0.5, 0.75, 'SYSTEM SUMMARY', color=HUD_C, fontsize=14,
+            ha='center', alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     glow_text(ax, 0.5, 0.62,
               'MARL-PPO + Graph Laplacian λ₂\nPhysically-Grounded Swarm Disruption',
@@ -1236,19 +1286,19 @@ def render_outro(ax, t):
         row_i = i // 3
         x = 0.22 + col_i * 0.27
         y = 0.40 - row_i * 0.07
-        ax.text(x, y, f'✦ {tag}', color=col, fontsize=9,
-                ha='center', alpha=safe(a*0.9), transform=ax.transAxes)
+        ax.text(x, y, f'✦ {tag}', color=col, fontsize=10,
+                ha='center', alpha=safe(a*0.95), transform=ax.transAxes)
 
     ax.text(0.5, 0.24, 'Extending Valianti et al. — IEEE TMC, December 2024',
-            color=DIM, fontsize=10, ha='center', alpha=safe(a*0.8),
+            color=DIM, fontsize=11, ha='center', alpha=safe(a*0.9),
             transform=ax.transAxes, style='italic')
 
     ax.text(0.5, 0.15, 'Mean λ₂ Reduction: 75–85%  ●  Theoretical Guarantee: Proposition 1  ●  Scales to N=100, M=40',
-            color=HUD_C, fontsize=9, ha='center', alpha=safe(a*0.7),
+            color=HUD_C, fontsize=10, ha='center', alpha=safe(a*0.85),
             transform=ax.transAxes)
 
     ax.text(0.5, 0.07, 'Publication-Ready Research',
-            color=GREEN_C, fontsize=11, ha='center', alpha=safe(a),
+            color=GREEN_C, fontsize=12, ha='center', alpha=safe(a),
             transform=ax.transAxes, fontweight='bold')
 
 
@@ -1262,27 +1312,27 @@ def render_critic_network(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'CRITIC NETWORK — The Global Evaluator During Training',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # ── Left panel: Actor (reminder) ─────────────────────────────────────────
     if t > 0.05:
         actor_a = ease(min((t - 0.05) / 0.15, 1.0)) * a
-        draw_hud_box(ax, 0.03, 0.12, 0.40, 0.75, 'ACTOR  (M copies, one per jammer)',
+        draw_hud_box(ax, 0.03, 0.15, 0.40, 0.72, 'ACTOR  (M copies, one per jammer)',
                      color=JAMMER_C, alpha=safe(actor_a))
 
         # Each jammer feeds its OWN 5D obs
         for k in range(4):
-            ky = 0.71 - k * 0.13
+            ky = 0.72 - k * 0.13
             ax.text(0.06, ky + 0.02, f'Jammer {k+1}', color=JAMMER_C,
-                    fontsize=8, alpha=safe(actor_a), transform=ax.transAxes)
+                    fontsize=9, alpha=safe(actor_a), transform=ax.transAxes)
             # Mini obs box
             rect = patches.Rectangle((0.06, ky - 0.03), 0.10, 0.055,
                                       facecolor='#0a2030', edgecolor=JAMMER_C,
-                                      linewidth=1, transform=ax.transAxes,
+                                      linewidth=1.2, transform=ax.transAxes,
                                       alpha=safe(actor_a))
             ax.add_patch(rect)
-            ax.text(0.11, ky, '5D obs', color=HUD_C, fontsize=7,
+            ax.text(0.11, ky, '5D obs', color=HUD_C, fontsize=8.5,
                     ha='center', va='center', alpha=safe(actor_a),
                     transform=ax.transAxes)
             # Arrow to shared network
@@ -1300,7 +1350,7 @@ def render_critic_network(ax, t):
                                         alpha=safe(actor_a))
         ax.add_patch(rect2)
         ax.text(0.325, 0.525, 'SHARED\nACTOR\nπ_θ', color=JAMMER_C,
-                fontsize=8.5, ha='center', va='center', alpha=safe(actor_a),
+                fontsize=10, ha='center', va='center', alpha=safe(actor_a),
                 transform=ax.transAxes, fontweight='bold', linespacing=1.4)
 
         # Output arrows
@@ -1309,26 +1359,26 @@ def render_critic_network(ax, t):
                                     lw=1.2, alpha=safe(actor_a)),
                     xycoords='axes fraction', textcoords='axes fraction')
         ax.text(0.41, 0.60, 'Vx,Vy + band', color=JAMMER_C,
-                fontsize=7.5, alpha=safe(actor_a), transform=ax.transAxes)
-        ax.text(0.11, 0.23, 'Local obs\nonly — no\nteam state', color=HUD_C,
-                fontsize=7.5, ha='center', alpha=safe(actor_a * 0.8),
+                fontsize=9, alpha=safe(actor_a), transform=ax.transAxes, fontweight='bold')
+        ax.text(0.11, 0.24, 'Local obs\nonly — no\nteam state', color=HUD_C,
+                fontsize=8.5, ha='center', alpha=safe(actor_a * 0.9),
                 transform=ax.transAxes, linespacing=1.3, style='italic')
 
         # ── Right panel: Critic ───────────────────────────────────────────────────
         crit_a = ease(min((t - 0.20) / 0.18, 1.0)) * a
-        draw_hud_box(ax, 0.54, 0.12, 0.43, 0.75,
+        draw_hud_box(ax, 0.54, 0.15, 0.43, 0.72,
                      'CRITIC  (ONE copy, sees full team)',
                      color=GOLD, alpha=safe(crit_a))
 
         # Mean pooling step
         for k in range(4):
-            ky = 0.71 - k * 0.13
+            ky = 0.72 - k * 0.13
             rect = patches.Rectangle((0.57, ky - 0.03), 0.10, 0.055,
                                       facecolor='#201500', edgecolor=GOLD,
-                                      linewidth=1, transform=ax.transAxes,
+                                      linewidth=1.2, transform=ax.transAxes,
                                       alpha=safe(crit_a))
             ax.add_patch(rect)
-            ax.text(0.62, ky, f's_{k+1}', color=GOLD, fontsize=8,
+            ax.text(0.62, ky, f's_{k+1}', color=GOLD, fontsize=9,
                     ha='center', va='center', alpha=safe(crit_a),
                     transform=ax.transAxes)
             ax.annotate('', xy=(0.73, 0.505), xytext=(0.68, ky),
@@ -1345,8 +1395,8 @@ def render_critic_network(ax, t):
                                         alpha=safe(crit_a))
         ax.add_patch(rect3)
         ax.text(0.78, 0.505, 'mean\npool', color=GOLD,
-                fontsize=8, ha='center', va='center', alpha=safe(crit_a),
-                transform=ax.transAxes, linespacing=1.3)
+                fontsize=9.5, ha='center', va='center', alpha=safe(crit_a),
+                transform=ax.transAxes, linespacing=1.3, fontweight='bold')
 
         # Critic network box
         rect4 = patches.FancyBboxPatch((0.85, 0.35), 0.10, 0.30,
@@ -1356,7 +1406,7 @@ def render_critic_network(ax, t):
                                         alpha=safe(crit_a))
         ax.add_patch(rect4)
         ax.text(0.90, 0.505, 'CRITIC\nV_φ(s)', color=GOLD,
-                fontsize=8.5, ha='center', va='center', alpha=safe(crit_a),
+                fontsize=10, ha='center', va='center', alpha=safe(crit_a),
                 transform=ax.transAxes, fontweight='bold', linespacing=1.4)
 
         ax.annotate('', xy=(0.85, 0.505), xytext=(0.83, 0.505),
@@ -1364,44 +1414,35 @@ def render_critic_network(ax, t):
                                     alpha=safe(crit_a)),
                     xycoords='axes fraction', textcoords='axes fraction')
 
-        # Output
-        ax.annotate('', xy=(0.965, 0.505), xytext=(0.955, 0.505),
+        # Output — keep within frame bounds
+        ax.annotate('', xy=(0.96, 0.505), xytext=(0.955, 0.505),
                     arrowprops=dict(arrowstyle='->', color=GOLD, lw=1.5,
                                     alpha=safe(crit_a)),
                     xycoords='axes fraction', textcoords='axes fraction')
-        ax.text(0.968, 0.52, 'V(s)', color=GOLD, fontsize=9,
+        ax.text(0.96, 0.54, 'V(s)', color=GOLD, fontsize=10,
                 va='center', alpha=safe(crit_a), transform=ax.transAxes,
                 fontweight='bold')
-        ax.text(0.968, 0.48, '(value\nestimate)', color=GOLD, fontsize=7,
-                va='center', alpha=safe(crit_a * 0.8), transform=ax.transAxes,
-                linespacing=1.2)
+        ax.text(0.96, 0.46, '(value est.)', color=GOLD, fontsize=8,
+                va='center', alpha=safe(crit_a * 0.9), transform=ax.transAxes)
 
     # ── Key difference callout ────────────────────────────────────────────────
     if t > 0.45:
         diff_a = ease(min((t - 0.45) / 0.15, 1.0)) * a
-        draw_hud_box(ax, 0.03, 0.01, 0.94, 0.10,
+        draw_hud_box(ax, 0.03, 0.02, 0.94, 0.12,
                      '', color=HUD_C, alpha=safe(diff_a))
-        ax.text(0.5, 0.085, 'ACTOR: local obs per jammer  →  decides WHERE to move and WHICH band to jam',
-                color=JAMMER_C, fontsize=9, ha='center', alpha=safe(diff_a),
-                transform=ax.transAxes)
-        ax.text(0.5, 0.042, 'CRITIC: pooled global state  →  estimates how GOOD the current team situation is  (used ONLY during training)',
-                color=GOLD, fontsize=9, ha='center', alpha=safe(diff_a),
-                transform=ax.transAxes)
+        ax.text(0.5, 0.10, 'ACTOR: local obs per jammer  →  decides WHERE to move and WHICH band to jam',
+                color=JAMMER_C, fontsize=10, ha='center', alpha=safe(diff_a),
+                transform=ax.transAxes, fontweight='bold')
+        ax.text(0.5, 0.055, 'CRITIC: pooled global state  →  estimates how GOOD the current team situation is  (used ONLY during training)',
+                color=GOLD, fontsize=10, ha='center', alpha=safe(diff_a),
+                transform=ax.transAxes, fontweight='bold')
 
     # ── CTDE label ────────────────────────────────────────────────────────────
     if t > 0.60:
         ctde_a = ease(min((t - 0.60) / 0.15, 1.0)) * a
-        ax.text(0.50, 0.895, '▶  Centralized Training  /  Decentralized Execution  (CTDE)',
-                color=GREEN_C, fontsize=11, ha='center', alpha=safe(ctde_a),
+        ax.text(0.50, 0.90, '▶  Centralized Training  /  Decentralized Execution  (CTDE)',
+                color=GREEN_C, fontsize=12, ha='center', alpha=safe(ctde_a),
                 transform=ax.transAxes, fontweight='bold')
-        lines2 = [
-            'Training:   Critic sees ALL agents — better gradient estimates',
-            'Deployment: Critic is discarded — each jammer runs its Actor alone in real time',
-        ]
-        for i, ln in enumerate(lines2):
-            ax.text(0.50, 0.845 - i * 0.045, ln,
-                    color=HUD_C, fontsize=9, ha='center',
-                    alpha=safe(ctde_a * 0.85), transform=ax.transAxes)
 
     # ── Mean pooling explanation ──────────────────────────────────────────────
     if t > 0.72:
@@ -1409,10 +1450,10 @@ def render_critic_network(ax, t):
         draw_hud_box(ax, 0.54, 0.22, 0.43, 0.12,
                      '', color=GOLD, alpha=safe(mp_a * 0.7))
         ax.text(0.755, 0.305, 'Mean pooling:  s_pooled = (1/M) × Σ s_j',
-                color=GOLD, fontsize=9, ha='center', alpha=safe(mp_a),
-                transform=ax.transAxes)
+                color=GOLD, fontsize=10, ha='center', alpha=safe(mp_a),
+                transform=ax.transAxes, fontweight='bold')
         ax.text(0.755, 0.26, 'Critic input size stays FIXED regardless of M  →  scales to M=40',
-                color=TITLE_C, fontsize=8, ha='center', alpha=safe(mp_a),
+                color=TITLE_C, fontsize=9, ha='center', alpha=safe(mp_a),
                 transform=ax.transAxes)
 
 
@@ -1421,7 +1462,7 @@ def render_ppo_explained(ax, t):
     ax.set_facecolor(BG)
 
     ax.text(0.5, 0.96, 'PPO — Proximal Policy Optimisation  |  GAE  |  Clipping',
-            color=TITLE_C, fontsize=12, ha='center', va='top',
+            color=TITLE_C, fontsize=13, ha='center', va='top',
             alpha=safe(a), transform=ax.transAxes, fontweight='bold')
 
     # ── Phase 1: What problem does PPO solve? (t 0.00–0.25) ──────────────────
@@ -1434,11 +1475,11 @@ def render_ppo_explained(ax, t):
 
         ax.text(0.5, 0.845,
                 'Without clipping: one bad update can make the policy WORSE — and it never recovers.',
-                color=WARN_C, fontsize=10, ha='center', alpha=safe(prob_a),
-                transform=ax.transAxes)
+                color=WARN_C, fontsize=11, ha='center', alpha=safe(prob_a),
+                transform=ax.transAxes, fontweight='bold')
         ax.text(0.5, 0.795,
                 'Like steering a car: small correction = fine.  Giant jerk of the wheel = crash.',
-                color=TITLE_C, fontsize=9.5, ha='center', alpha=safe(prob_a),
+                color=TITLE_C, fontsize=10, ha='center', alpha=safe(prob_a),
                 transform=ax.transAxes, style='italic')
 
         # Show unstable vs stable curves
@@ -1455,53 +1496,53 @@ def render_ppo_explained(ax, t):
 
         # Plot area
         ax.plot(xs[:n] * 0.42 + 0.05, bad_norm[:n]  * 0.38 + 0.20,
-                color=WARN_C, lw=1.8, alpha=safe(prob_a * 0.9))
+                color=WARN_C, lw=2.2, alpha=safe(prob_a * 0.95))
         ax.plot(xs[:n] * 0.42 + 0.52, good_norm[:n] * 0.38 + 0.20,
-                color=GREEN_C, lw=1.8, alpha=safe(prob_a * 0.9))
+                color=GREEN_C, lw=2.2, alpha=safe(prob_a * 0.95))
 
         ax.text(0.26, 0.215, 'Vanilla Policy Gradient\n(unstable — crashes)',
-                color=WARN_C, fontsize=8.5, ha='center', alpha=safe(prob_a),
-                transform=ax.transAxes, linespacing=1.3)
+                color=WARN_C, fontsize=10, ha='center', alpha=safe(prob_a),
+                transform=ax.transAxes, linespacing=1.3, fontweight='bold')
         ax.text(0.73, 0.215, 'PPO\n(stable — smooth learning)',
-                color=GREEN_C, fontsize=8.5, ha='center', alpha=safe(prob_a),
-                transform=ax.transAxes, linespacing=1.3)
+                color=GREEN_C, fontsize=10, ha='center', alpha=safe(prob_a),
+                transform=ax.transAxes, linespacing=1.3, fontweight='bold')
 
     # ── Phase 2: Clipping (t 0.28–0.60) ──────────────────────────────────────
     if t > 0.28:
         clip_a = safe(scene_alpha(t, fi=0.28, fo=0.95))
 
-        draw_hud_box(ax, 0.03, 0.48, 0.94, 0.13,
+        draw_hud_box(ax, 0.03, 0.50, 0.94, 0.15,
                      'PPO CLIPPING — The Guardrail', color=JAMMER_C,
                      alpha=safe(clip_a * ease(min((t - 0.28) / 0.12, 1.0))))
 
         clip_aa = safe(clip_a * ease(min((t - 0.28) / 0.12, 1.0)))
-        ax.text(0.5, 0.565,
+        ax.text(0.5, 0.595,
                 'r_t(θ)  =  π_θ(a|s) / π_θ_old(a|s)          '
                 'L_CLIP  =  E[ min( r_t · A_t ,  clip(r_t, 1−ε, 1+ε) · A_t ) ]',
-                color=GOLD, fontsize=9.5, ha='center', alpha=safe(clip_aa),
-                transform=ax.transAxes)
-        ax.text(0.5, 0.520,
+                color=GOLD, fontsize=10.5, ha='center', alpha=safe(clip_aa),
+                transform=ax.transAxes, fontweight='bold')
+        ax.text(0.5, 0.54,
                 'ε = 0.2  →  update is clipped to ±20% of old policy  →  no single update can destroy learned behaviour',
-                color=TITLE_C, fontsize=9, ha='center', alpha=safe(clip_aa),
+                color=TITLE_C, fontsize=10, ha='center', alpha=safe(clip_aa),
                 transform=ax.transAxes)
 
     # ── Phase 3: GAE (t 0.45–0.75) ────────────────────────────────────────────
     if t > 0.45:
         gae_a = safe(clip_a * ease(min((t - 0.45) / 0.15, 1.0)) if t > 0.28 else 0)
 
-        draw_hud_box(ax, 0.03, 0.32, 0.94, 0.145,
+        draw_hud_box(ax, 0.03, 0.33, 0.94, 0.15,
                      'GAE — Generalised Advantage Estimation', color=HUD_C,
                      alpha=safe(gae_a))
 
         gae_show = safe(gae_a * ease(min((t - 0.45) / 0.15, 1.0)))
-        ax.text(0.5, 0.422,
+        ax.text(0.5, 0.435,
                 'δ_t  =  r_t  +  γ · V(s_{t+1}) · (1−done)  −  V(s_t)',
-                color=GOLD, fontsize=9.5, ha='center', alpha=safe(gae_show),
-                transform=ax.transAxes)
-        ax.text(0.5, 0.378,
+                color=GOLD, fontsize=10.5, ha='center', alpha=safe(gae_show),
+                transform=ax.transAxes, fontweight='bold')
+        ax.text(0.5, 0.385,
                 'A_t  =  δ_t  +  (γ · λ_GAE) · A_{t+1} · (1−done)          '
                 '[computed backwards through buffer]',
-                color=GOLD, fontsize=9, ha='center', alpha=safe(gae_show),
+                color=GOLD, fontsize=9.5, ha='center', alpha=safe(gae_show),
                 transform=ax.transAxes)
 
         if t > 0.55:
@@ -1512,8 +1553,8 @@ def render_ppo_explained(ax, t):
                 ('λ_GAE = 0.95  →  sweet spot — used in our system', GREEN_C),
             ]
             for i, (ln, col) in enumerate(lines_gae):
-                ax.text(0.5, 0.345 - i * 0.038, ln,
-                        color=col, fontsize=8.5, ha='center', alpha=safe(gae2),
+                ax.text(0.5, 0.345 - i * 0.04, ln,
+                        color=col, fontsize=9.5, ha='center', alpha=safe(gae2),
                         transform=ax.transAxes,
                         fontweight='bold' if i == 2 else 'normal')
 
@@ -1521,7 +1562,7 @@ def render_ppo_explained(ax, t):
     if t > 0.65:
         loop_a = safe(ease(min((t - 0.65) / 0.15, 1.0)) * a)
 
-        draw_hud_box(ax, 0.03, 0.01, 0.94, 0.30,
+        draw_hud_box(ax, 0.03, 0.01, 0.94, 0.26,
                      'PPO UPDATE LOOP — What Happens Every 2048 Steps',
                      color=GREEN_C, alpha=safe(loop_a))
 
@@ -1538,12 +1579,12 @@ def render_ppo_explained(ax, t):
 
         for i, (num, text, col) in enumerate(steps_ppo):
             item_show = safe(loop_a * ease(min((t - 0.65 - i * 0.025) / 0.08, 1.0)))
-            ax.text(0.06, 0.272 - i * 0.031, f'Step {num}:',
-                    color=GREEN_C, fontsize=8, va='center',
+            ax.text(0.06, 0.235 - i * 0.028, f'Step {num}:',
+                    color=GREEN_C, fontsize=9, va='center',
                     alpha=safe(item_show), transform=ax.transAxes,
                     fontweight='bold')
-            ax.text(0.135, 0.272 - i * 0.031, text,
-                    color=col, fontsize=8, va='center',
+            ax.text(0.135, 0.235 - i * 0.028, text,
+                    color=col, fontsize=9, va='center',
                     alpha=safe(item_show), transform=ax.transAxes)
 
         # Hyperparams
@@ -1554,9 +1595,9 @@ def render_ppo_explained(ax, t):
                 'lr_actor=3e-4', 'lr_critic=1e-3',
                 'K_epochs=10', 'T_rollout=2048', 'batch=256',
             ]
-            ax.text(0.5, 0.04,
+            ax.text(0.5, 0.022,
                     '  ·  '.join(hps),
-                    color=DIM, fontsize=8, ha='center', alpha=safe(hp_a),
+                    color=HUD_C, fontsize=9, ha='center', alpha=safe(hp_a),
                     transform=ax.transAxes)
 
 
@@ -1624,6 +1665,8 @@ def render_frame(fig, ax, frame):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main():
+    import os
+
     print("=" * 60)
     print("MARL Jammer — 2D Animated Explainer Video Renderer")
     print(f"Resolution: {FIG_W*100}×{FIG_H*100} px  |  {FPS} fps")
@@ -1635,21 +1678,32 @@ def main():
     fig.patch.set_facecolor(BG)
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
-    output_path = 'MARL_Jammer_Explainer.mp4'
+    # Output paths — version 3
+    output_dir = os.path.join('animation', 'version 3')
+    frames_dir = os.path.join(output_dir, 'frames')
+    os.makedirs(frames_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, 'MARL_Jammer_Explainer_v3.mp4')
 
     writer = FFMpegWriter(
         fps=FPS,
         metadata={'title': 'MARL Jammer Drone System', 'artist': 'Research Team'},
-        extra_args=['-vcodec', 'libx264', '-crf', '18', '-pix_fmt', 'yuv420p']
+        extra_args=['-vcodec', 'libx264', '-crf', '16', '-pix_fmt', 'yuv420p',
+                    '-preset', 'slow']
     )
 
     print(f"\nRendering to: {output_path}")
+    print(f"Frames to:   {frames_dir}/")
     print("Progress:")
 
     with writer.saving(fig, output_path, dpi=RENDER_DPI):
         for frame in range(TOTAL_FRAMES):
             render_frame(fig, ax, frame)
             writer.grab_frame()
+
+            # Save 1 frame per second as PNG (every FPS-th frame)
+            if frame % FPS == 0:
+                frame_path = os.path.join(frames_dir, f'frame_{frame:06d}.png')
+                fig.savefig(frame_path, dpi=RENDER_DPI, facecolor=BG)
 
             if frame % (FPS * 10) == 0:
                 pct = frame / TOTAL_FRAMES * 100
@@ -1658,7 +1712,7 @@ def main():
 
     plt.close(fig)
     print(f"\n✓ Done! Video saved: {output_path}")
-    print(f"  File size: check {output_path}")
+    print(f"  Frames saved: {frames_dir}/ ({TOTAL_SECS} PNGs, 1 per second)")
 
 
 if __name__ == '__main__':
