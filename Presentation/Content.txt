@@ -1,0 +1,653 @@
+Slide 1 — Recap of Phase 1 and Its Limitations
+
+Title:
+
+Where Phase 1 Ended — and Why It Was Not Enough
+
+
+Left column — "What Phase 1 Achieved"
+Component Phase 1 ApproachAlgorithmQ-Learning + Tile CodingRewardMaximize received jamming power Scenarios2v3, 4v3, 6v3
+
+Right column — "Critical Limitations"
+
+❌ Wrong objective — maximizing power at individual drones does not measure swarm coordination loss
+❌ No graph metric — no way to know if the swarm is still connected as a network
+❌ Q-table cannot scale — state space explodes beyond 6 agents
+❌ Single frequency — only 2.4 GHz, real swarms use multiple bands
+
+
+
+Bottom box (full width, highlighted):
+
+Core gap: High jamming power at individual drones ≠ swarm fragmentation
+Phase2 objective: prove and optimize the exact mathematical condition for swarm disconnection
+
+Slide 2 — Modeling the Swarm as a Communication Graph
+
+Title:
+
+Enemy Swarm → Communication Graph G = (V, E)
+
+
+Left half — diagram (draw this):
+8 red dots scattered in 2 loose clusters.
+Draw orange lines only between nearby dots.
+Label:
+
+V = {d₁, d₂, ... dₙ} — drones are nodes
+E = {(i,j)} — active radio links are edges
+
+Below the graph draw the adjacency matrix (5×5 subset):
+A =  0  1  1  0  0
+     1  0  1  0  0
+     1  1  0  1  0
+     0  0  1  0  1
+     0  0  0  1  0
+
+A[i,j] = 1 if radio link exists between dᵢ and dⱼ
+A[i,j] = 0 otherwise
+
+
+Right half — two stacked boxes:
+Box 1:
+
+Edge condition — FSPL Model:
+P_R(i,j) = P_tx · (c / 4πf·d_ij)²
+Edge exists if:
+P_R(i,j) ≥ P_sens = −90 dBm
+AND link is not actively jammed
+d_ij = ‖xᵢ − xⱼ‖₂
+
+Box 2:
+
+Graph Laplacian:
+L = D − A
+D = diagonal degree matrix
+D[i,i] = number of links drone i has
+L encodes complete connectivity structure of the swarm
+
+
+Bottom strip:
+
+Recomputed every timestep as jammers move and links break
+
+
+Image required:
+A clean hand-drawn or PowerPoint-drawn graph — 8 red circles, orange connecting lines between nearby ones only, two visible clusters. Keep it simple.
+
+Slide 3 — The Fiedler Value λ₂
+
+Title:
+
+Algebraic Connectivity λ₂ — One Number That Measures Swarm Coordination
+
+
+Top — formula box (center, large):
+
+Eigen decomposition of Laplacian L:
+L·v = λ·v
+Eigenvalues: 0 = λ₁ ≤ λ₂ ≤ λ₃ ≤ ... ≤ λₙ
+λ₂ = Fiedler Value = Algebraic Connectivity
+
+
+Middle — three state panels side by side:
+Panel 1 (red border):
+
+Dense connected graph
+Many edges between all drones
+λ₂ = 0.82
+Swarm fully coordinated
+❌ Dangerous
+
+Panel 2 (orange border):
+
+Sparse graph
+Few links remaining
+λ₂ = 0.21
+Partially disrupted
+⚠️ Degraded
+
+Panel 3 (green border):
+
+Two isolated clusters
+Zero edges between them
+λ₂ = 0.00
+Swarm fragmented
+✓ Mission complete
+
+
+Bottom — Proposition 1 box (gold border):
+
+Proposition 1 — Fiedler (1973):
+λ₂(G) = 0 ⟺ Graph G is disconnected
+λ₂(G) > 0 ⟺ Graph G is connected
+
+When our system drives λ₂ to zero, swarm fragmentation is provably guaranteed.
+
+
+Image required:
+Three small graphs drawn side by side — Panel 1 fully connected, Panel 2 sparsely connected, Panel 3 split into two separate islands with no edges between them. Use red circles for nodes, orange lines for edges.
+
+Slide 4 — System Overview
+
+Title:
+
+Complete System Pipeline — 4 Phases
+
+
+Center — vertical flowchart (draw this as 4 connected boxes with arrows):
+Box 1 (blue):
+
+PHASE 1 — Environment Setup
+Spawn N enemy drones
+Build communication graph G
+Compute initial λ₂(0)
+
+↓
+Box 2 (orange):
+
+PHASE 2 — Clustering and Deployment
+Run DBSCAN on enemy positions
+Identify k cluster centroids
+Deploy M jammer drones near centroids
+
+↓
+Box 3 (teal):
+
+PHASE 3 — MARL-PPO Training Loop
+Each agent observes 5D state vector
+Actor network outputs velocity + frequency band
+Environment updates → λ₂ recomputed
+Reward computed → PPO weight update
+
+↓
+Box 4 (green):
+
+PHASE 4 — Deployment
+Load trained Actor weights
+Run deterministic inference in real time
+Monitor λ₂ until fragmentation
+
+
+Right side — small parameter box:
+
+N = 30 enemy drones
+M = 6 jammer agents
+Arena = 100m × 100m
+Episode length = 100 steps
+Training = 1500 Episodes
+Success = λ₂ < 0.2 × λ₂(0)
+
+Slide 5 — DBSCAN Clustering and Jammer Deployment
+
+Title:
+
+DBSCAN — Intelligent Jammer Initialization
+
+
+Left half — diagram (draw this):
+30 small red dots scattered in 3 natural clusters.
+Draw translucent colored circles around each cluster (3 different colors).
+Mark the center of each circle with a + symbol.
+Place a teal jammer drone marker at each + centroid.
+Label:
+
+ε = 30m (neighborhood radius)
+minPts = 2 (minimum cluster size)
+k = 3 clusters detected
+M = 6 jammers → 2 assigned per cluster
+
+
+Right half — two stacked boxes:
+Box 1:
+
+Why DBSCAN?
+Enemy swarms naturally form spatial clusters
+Random jammer placement wastes the first
+100–200 steps just repositioning
+DBSCAN finds cluster structure directly
+from enemy (x,y) positions — no labels needed
+Jammers start at centroids →
+immediately in effective jamming range
+
+Box 2:
+
+DBSCAN Algorithm — 3 steps:
+
+For each drone, find all drones within ε = 30m
+If ≥ minPts=2 neighbors → core point → form cluster
+Compute centroid μₖ of each cluster k
+
+Place jammers at μₖ ± small random offset
+Re-run every 10 timesteps as swarm moves
+
+
+
+Image required:
+Scatter plot of 30 red dots in 3 visible clusters. Draw 3 translucent colored ellipses around them. Mark centroids with + symbols. Place teal drone icons at centroids.
+
+Slide 6 — Agent Observation: The 5D State Vector
+
+Title:
+
+What Each Jammer Sees — 5D State Observation
+
+
+Center — table (main content of slide):
+IndexFeatureFormulaRangeMeanings[0]dist_to_centroid‖pos_j − μₖ‖ / arena_size[0,1]How far am I from my assigned cluster centers[1]cluster_densitynₖ / N[0,1]What fraction of enemies are in my clusters[2]dist_to_othersmean ‖pos_j − pos_j'‖ / arena_size[0,1]How spread out am I from teammate jammerss[3]coverage_overlappairs within 2·R_jam / total pairs[0,1]Am I wasting coverage by overlapping a teammates[4]band_match1 if b_j = b_enemy else 0{0,1}Is my current frequency matching the enemy band
+
+Bottom 
+
+
+
+
+Normalization:
+All values clipped to [0, 1]
+before entering the neural network
+s_norm = clip(s, 0, 1)
+Prevents any single feature from
+dominating the network activations
+
+Slide 7 — Actor Network Architecture
+
+Title:
+
+Actor Network — Mapping 5D Observation to Actions
+
+
+Center — network diagram (draw this):
+Input Layer        Hidden Layer 1      Hidden Layer 2        Output
+  (5 neurons)       (128 neurons)       (128 neurons)
+
+    s[0] ──┐
+    s[1] ──┤                                            ┌── μ_Vx  (velocity x)
+    s[2] ──┼──► [128] ──LayerNorm──ReLU──► [128] ──────┤── μ_Vy  (velocity y)
+    s[3] ──┤     neurons  ──LayerNorm──ReLU             ├── 433 MHz  ┐
+    s[4] ──┘                                            ├── 915 MHz  ├─ softmax
+                                                        ├── 2.4 GHz  │
+                                                        └── 5.8 GHz  ┘
+Label the two output branches:
+
+Continuous head → Gaussian distribution → sample (Vx, Vy)
+Discrete head → Categorical distribution → sample band index
+
+
+
+
+Layer sizes — why these numbers?
+5 → 128: each of 128 neurons learns one
+specific combination of the 5 input features
+128 → 128: second layer combines simple
+patterns into complex jamming strategies
+Total trainable weights:
+(5×128) + (128×128) + (128×6) = ~18,000
+
+
+
+
+Bottom strip:
+
+Parameter sharing: all M=6 jammers use ONE Actor network
+Each jammer passes its own local 5D observation
+Different inputs → different actions → coordinated behaviour
+
+
+Image required:
+Draw the network diagram — 5 small circles on left, two columns of larger rectangles for hidden layers, 6 circles on right split into 2 groups. Use arrows between layers.
+
+Slide 8 — Critic Network Architecture
+
+Title:
+
+Critic Network — Estimating Team Value V(s)
+
+
+Center — diagram (draw this):
+Jammer 1 state s₁ (5D) ──┐
+Jammer 2 state s₂ (5D) ──┤
+Jammer 3 state s₃ (5D) ──┼──► MEAN POOL ──► s_pooled (5D) ──► [128]──LN──ReLU──► [128]──LN──ReLU──► V(s)
+Jammer 4 state s₄ (5D) ──┤                                      
+Jammer 5 state s₅ (5D) ──┤   s_pooled = (1/M) Σ sⱼ
+Jammer 6 state s₆ (5D) ──┘
+Label the final output:
+
+V(s) = single scalar
+"Expected total future reward from this team state"
+
+
+Right side — two stacked boxes:
+Box 1:
+
+Why mean pooling?
+Critic needs to see the whole team
+but input size must stay fixed
+Mean pool collapses M×5 → 5
+regardless of whether M=4 or M=40
+This is why the Critic scales to
+any number of jammers without
+retraining or architectural changes
+
+Box 2:
+
+What does V(s) actually mean?
+V(s) = 0.74 means:
+"From this team configuration,
+I expect 0.74 total reward
+over the remaining episode"
+High V(s) → jammers well positioned,
+correct bands, λ₂ already falling
+Low V(s) → jammers misplaced,
+wrong frequency, λ₂ still high
+
+
+Bottom — CTDE box (full width, gold border):
+
+Centralized Training / Decentralized Execution (CTDE)
+Training: Critic uses pooled global state → better gradient estimates for Actor
+Deployment: Critic is completely discarded → each jammer runs Actor alone using only its own 5D observation
+
+Slide 9 — Reward Function
+
+Title:
+
+Reward Function — 5 Terms Teaching the Agent What "Good" Means
+
+
+Center — table:
+Term,Formula,Constants,Direction,Purpose
+λ₂ Reduction,1 - λ₂(t) / λ₂(0),ω₁ = 1.0,↑ maximize,PRIMARY — swarm fragmentation
+Band Match,(1/M) · Σ 1[b_j = b_enemy],ω₂ = 0.3,↑ maximize,Correct frequency selection
+Cluster Proximity,(1/M) · Σ exp(-κ · d_centroid),ω₃ = 0.2,↑ maximize,Stay near assigned cluster
+Energy Penalty,(1/M) · Σ ‖v_j‖² / v²_max,ω₄ = 0.1,↓ minimize,Discourage unnecessary movement
+Overlap Penalty,overlapping pairs / total pairs,ω₅ = 0.2,↓ minimize,Spread coverage across clusters
+
+Total reward formula (center, large):
+
+R(t) = ω₁·(λ₂ reduction) + ω₂·(band match) + ω₃·(proximity) − ω₄·(energy) − ω₅·(overlap)
+
+Slide 10 — TD Error: The Foundation of Everything
+
+Title:
+
+Temporal Difference Error — How the Agent Measures Surprise
+
+
+Top — intuition box (full width):
+
+Core idea:
+The Critic predicts expected future reward at state s_t
+After one step, we see what actually happened
+TD error = gap between prediction and reality
+
+
+Center — formula derivation (step by step):
+Step 1 — Critic prediction at time t:
+
+V(s_t) = "From this state, I expect to earn X total future reward"
+
+Step 2 — One step later, better estimate available:
+
+G_t ≈ r_t + γ · V(s_{t+1})
+r_t = actual reward earned this step
+γ · V(s_{t+1}) = discounted value of new state
+γ = 0.99 → future rewards worth slightly less than immediate
+
+Step 3 — TD Error:
+
+δ_t = r_t + γ · V(s_{t+1}) − V(s_t)
+= (what actually happened) − (what Critic predicted)
+
+
+Center — three interpretation boxes side by side:
+Box 1 (green):
+
+δ_t > 0
+Reality was BETTER
+than Critic predicted
+Action was good →
+increase its probability
+Example:
+Predicted 0.35
+Got 0.15 + 0.99×0.37
+δ = +0.017 ✓
+
+Box 2 (grey):
+
+δ_t = 0
+Reality matched
+Critic prediction exactly
+Action was average →
+no change needed
+Critic is perfectly
+calibrated for this state
+
+Box 3 (red):
+
+δ_t < 0
+Reality was WORSE
+than Critic predicted
+Action was bad →
+decrease its probability
+Example:
+Predicted 0.74
+Got −0.05 + 0.99×0.68
+δ = −0.057 ✗
+
+
+Bottom strip (gold border):
+
+δ_t is computed for EVERY timestep in the buffer after each rollout
+It is the raw signal from which Advantage and GAE are both derived
+Without δ_t there is no learning signal — it is the engine of all RL
+
+Slide 11 — Advantage and GAE
+
+Title:
+
+From TD Error to GAE — Computing How Good Each Action Truly Was
+
+
+Top — two column boxes:
+Left box (problem):
+
+Why not use δ_t directly as the learning signal?
+δ_t is only ONE step of information
+It fully trusts V(s_{t+1}) which is
+estimated by the Critic
+Early in training → Critic is wrong
+→ δ_t is wrong → bad learning signal
+We need to look further ahead
+to get a more accurate signal
+
+Right box (solution):
+
+Advantage A_t:
+A_t = "How much better was THIS action
+compared to average for this state?"
+A_t > 0 → action was above average → reinforce
+A_t < 0 → action was below average → suppress
+True advantage:
+A_t = Q(s_t, a_t) − V(s_t)
+But Q is unknown → we must estimate it
+
+
+Center — GAE derivation box (teal border, large):
+
+Generalised Advantage Estimation:
+1-step estimate (TD):
+A_t^(1) = δ_t = r_t + γV(s_{t+1}) − V(s_t)
+2-step estimate:
+A_t^(2) = δ_t + γδ_{t+1}
+= r_t + γr_{t+1} + γ²V(s_{t+2}) − V(s_t)
+n-step estimate:
+A_t^(n) = δ_t + γδ_{t+1} + γ²δ_{t+2} + ... + γⁿ⁻¹δ_{t+n-1}
+GAE — exponentially weighted sum of ALL n-step estimates:
+A_t^GAE = (1−λ) · [A_t^(1) + λA_t^(2) + λ²A_t^(3) + ...]
+Simplified recursive form (what code actually computes):
+A_t^GAE = δ_t + (γλ) · A_{t+1}^GAE
+Computed BACKWARDS from t=T to t=0
+
+
+Center bottom — numerical example box (full width):
+
+Example — your drone episode, last 4 steps:
+δ₄₇ = −0.02,  δ₄₈ = +0.15,  δ₄₉ = +0.41,  δ₅₀ = 0 (terminal)
+A₅₀ = 0
+A₄₉ = δ₄₉ + (0.99×0.95)×0 = +0.41
+A₄₈ = δ₄₈ + (0.94)×0.41  = 0.15 + 0.385 = +0.535
+A₄₇ = δ₄₇ + (0.94)×0.535 = −0.02 + 0.503 = +0.483
+Step 47 looks slightly bad in isolation (δ=−0.02)
+But GAE shows it was actually good (+0.483)
+because it set up the big reward at step 49
+This is exactly why GAE is better than raw TD error
+
+Slide 12 — PPO: Proximal Policy Optimization
+
+Title:
+
+PPO — Why Standard Policy Gradient Breaks and How PPO Fixes It
+
+
+Top — vanilla policy gradient problem (full width, red border):
+
+Standard Policy Gradient Update Rule:
+θ ← θ + α · A_t · ∇_θ log π_θ(a_t | s_t)
+In plain English:
+"Move the weights in the direction that makes good actions more likely"
+"The bigger the advantage A_t, the bigger the weight change"
+Why this breaks:
+Suppose A_t = 5.2 (very good action) and gradient is large.
+Weight update is HUGE.
+Policy jumps from "move toward centroid" to "always go to corner"
+in a single update — completely destroying 50,000 steps of learning.
+Next episode the policy is broken.
+Rewards crash.
+Takes thousands of steps to recover.
+This is called a catastrophic policy update.
+The problem is: we have NO control over how much the policy changes per update.
+
+
+Center left — PPO core idea box (teal border):
+
+PPO Key Insight:
+Measure HOW MUCH the policy has changed from the old one.
+If the change is too large → stop the update there.
+Define the probability ratio:
+r_t(θ) = π_θ(a_t | s_t) / π_θ_old(a_t | s_t)
+r_t = 1.0 → policy unchanged for this action
+r_t = 1.5 → new policy 50% MORE likely to take this action
+r_t = 0.6 → new policy 40% LESS likely to take this action
+PPO says: keep r_t inside [1−ε, 1+ε] = [0.8, 1.2]
+No single update can change any action probability by more than 20%
+
+
+Center right — clipped objective derivation (gold border):
+
+Unclipped objective (naive):
+L_UNCLIP = E_t[ r_t(θ) · A_t ]
+Just scales advantage by how much policy changed.
+No constraint → same catastrophic update problem.
+Clipped objective:
+L_CLIP = E_t[ min( r_t(θ)·A_t,  clip(r_t(θ), 1−ε, 1+ε)·A_t ) ]
+The min() of two terms is the key:
+Term 1: r_t·A_t → unconstrained objective
+Term 2: clip(r_t, 0.8, 1.2)·A_t → hard-capped objective
+min() always picks the MORE CONSERVATIVE of the two.
+This creates a one-sided constraint:
+→ Improvements are capped at 20%
+→ The update cannot be exploited beyond the trust region
+
+
+
+
+Bottom left — entropy box:
+
+Entropy Bonus — keeping exploration alive:
+H(π) = −Σ_a π(a|s) · log π(a|s)
+High entropy → policy is spread across many actions → exploring
+Low entropy → policy always picks same action → exploiting
+Without entropy bonus:
+Early in training policy collapses to one action
+Never discovers better strategies
+We ADD entropy to the loss:
+L_entropy = −c₁ · H(π_θ)    c₁ = 0.01
+Small penalty for being too certain too early
+
+
+Bottom right — total loss box (green border):
+
+Complete PPO Loss Function:
+L_total = −L_CLIP + c₂·L_critic − c₁·L_entropy
+Where:
+L_CLIP   = clipped policy objective (maximize)
+L_critic = MSE( V(s_t) , G_t )² (minimize)
+L_entropy = entropy bonus (maximize)
+c₁ = 0.01 → entropy weight
+c₂ = 0.5  → critic loss weight
+Negative sign on L_CLIP because
+PyTorch minimizes loss →
+we negate to turn maximization into minimization
+
+Slide 13— The Complete PPO Training Loop
+
+Title:
+
+PPO Training — One Complete Update Cycle
+
+
+Center — clean numbered flowchart (6 steps):
+Step 1 (blue box):
+
+Collect Experience
+All 6 jammers run for 2048 steps using current policy
+Store at every step: state, action, reward, log probability, critic value
+
+↓
+Step 2 (orange box):
+
+Compute GAE Advantages
+Walk backwards through buffer
+A_t = δ_t + γλ · A_{t+1}
+Every step now has an advantage estimate
+
+↓
+Step 3 (teal box):
+
+Normalize Advantages
+A_t ← (A_t − mean) / std
+All advantages on same scale → stable gradients
+
+↓
+Step 4 (purple box):
+
+10 Epochs of Mini-batch Updates
+Shuffle buffer → split into batches of 256
+For each batch:
+→ Compute ratio r_t = π_new / π_old
+→ Compute clipped PPO loss
+→ Compute Critic MSE loss
+→ Backpropagate → update weights
+
+↓
+Step 5 (red box):
+
+Gradient Clip + Adam Update
+Clip gradient norm to 0.5
+Adam adjusts each weight individually
+W_new = W_old − lr · gradient
+
+↓
+Step 6 (green box):
+
+Reset and Repeat
+π_old ← π_new
+Clear buffer
+Back to Step 1
+
+Slide 14— Training Results
+add 4 graphs 
+
+Dataset evaluation :
+add 2 graphs 
+
+final video .
